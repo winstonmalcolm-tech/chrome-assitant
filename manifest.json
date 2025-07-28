@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Mic Chat Sidebar",
+  "version": "1.0",
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history"],
+  "action": {
+    "default_title": "Open Mic Chat"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "panel.html",
+    "openPanelOnActionClick": true
+  },
+  "background": {
+    "service_worker": "background.js"
+  } 
+}
