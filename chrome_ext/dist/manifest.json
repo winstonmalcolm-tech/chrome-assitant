@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Mic Chat Sidebar",
+  "version": "1.0",
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history"],
+  "action": {
+    "default_title": "Open Mic Chat"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*"
+      ],
+      "js": ["assets/content.js"],
+      "css": ["assets/contentStyle.css"],
+      "run_at": "document_idle",
+      "type":"module"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["assets/selectText.js"],
+      "run_at": "document_idle",
+      "type":"module"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["assets/modalTemplate.js"],
+      "run_at": "document_idle",
+      "type":"module"
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/panel.html",
+    "openPanelOnActionClick": true
+  },
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  }
+}

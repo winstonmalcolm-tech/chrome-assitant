@@ -1,0 +1,325 @@
+/* Email Grammar Checker Styles */
+
+.email-grammar-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 999999 !important;
+}
+
+/* Highlight Styles */
+.email-grammar-highlight {
+  border-radius: 2px !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.email-grammar-highlight:hover {
+  opacity: 0.9 !important;
+  transform: scale(1.02) !important;
+}
+
+/* Error highlights (red) */
+.email-grammar-highlight.grammar.error,
+.email-grammar-highlight.spelling.error {
+  background-color: rgba(255, 59, 48, 0.15) !important;
+  border-bottom: 2px wavy #ff3b30 !important;
+}
+
+/* Style suggestions (blue) */
+.email-grammar-highlight.style.suggestion {
+  background-color: rgba(0, 122, 255, 0.12) !important;
+  border-bottom: 2px dotted #007aff !important;
+}
+
+/* Grammar suggestions (yellow) */
+.email-grammar-highlight.grammar.suggestion {
+  background-color: rgba(255, 204, 0, 0.15) !important;
+  border-bottom: 2px dotted #ffcc00 !important;
+}
+
+/* Popup Styles */
+.email-grammar-popup {
+  position: fixed !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  z-index: 1000000 !important;
+  min-width: 280px !important;
+  max-width: 400px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  overflow: hidden !important;
+  animation: popupFadeIn 0.2s ease-out !important;
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popup-header {
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px 8px 16px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  background: #fafafa !important;
+}
+
+.issue-icon {
+  font-size: 16px !important;
+  margin-right: 8px !important;
+}
+
+.issue-type {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.popup-message {
+  padding: 16px !important;
+  color: #4b5563 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.suggestions {
+  padding: 12px 16px !important;
+  background: #f9fafb !important;
+}
+
+.suggestion-btn {
+  display: block !important;
+  width: 100% !important;
+  padding: 10px 14px !important;
+  margin: 6px 0 !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #374151 !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-align: left !important;
+  font-family: inherit !important;
+}
+
+.suggestion-btn:hover {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.suggestion-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.popup-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  background: #ffffff !important;
+  border-top: 1px solid #f3f4f6 !important;
+}
+
+.ignore-btn {
+  padding: 8px 16px !important;
+  border: 1px solid #d1d5db !important;
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+}
+
+.ignore-btn:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #4b5563 !important;
+}
+
+.close-btn {
+  width: 24px !important;
+  height: 24px !important;
+  border: none !important;
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  border-radius: 50% !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: inherit !important;
+}
+
+.close-btn:hover {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+  transform: scale(1.1) !important;
+}
+
+/* Gmail-specific adjustments */
+body[class*="gmail"] .email-grammar-highlight,
+.gmail .email-grammar-highlight {
+  z-index: 999999 !important;
+}
+
+/* Outlook-specific adjustments */
+body[class*="outlook"] .email-grammar-highlight,
+.outlook .email-grammar-highlight {
+  z-index: 999999 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .email-grammar-popup {
+    min-width: 240px !important;
+    max-width: 90vw !important;
+    font-size: 13px !important;
+  }
+  
+  .popup-message {
+    padding: 12px !important;
+  }
+  
+  .suggestions {
+    padding: 8px 12px !important;
+  }
+  
+  .suggestion-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .email-grammar-popup {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #f9fafb !important;
+  }
+  
+  .popup-header {
+    background: #111827 !important;
+    border-color: #374151 !important;
+  }
+  
+  .issue-type {
+    color: #f3f4f6 !important;
+  }
+  
+  .popup-message {
+    color: #d1d5db !important;
+    border-color: #374151 !important;
+  }
+  
+  .suggestions {
+    background: #111827 !important;
+  }
+  
+  .suggestion-btn {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+  
+  .suggestion-btn:hover {
+    background: #4b5563 !important;
+    border-color: #6b7280 !important;
+  }
+  
+  .popup-actions {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+  
+  .ignore-btn {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #d1d5db !important;
+  }
+  
+  .ignore-btn:hover {
+    background: #4b5563 !important;
+    color: #f3f4f6 !important;
+  }
+  
+  .close-btn {
+    background: #374151 !important;
+    color: #d1d5db !important;
+  }
+  
+  .close-btn:hover {
+    background: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .email-grammar-highlight.grammar.error,
+  .email-grammar-highlight.spelling.error {
+    background-color: rgba(255, 0, 0, 0.3) !important;
+    border-bottom: 3px solid #ff0000 !important;
+  }
+  
+  .email-grammar-highlight.style.suggestion {
+    background-color: rgba(0, 0, 255, 0.2) !important;
+    border-bottom: 3px solid #0000ff !important;
+  }
+  
+  .email-grammar-popup {
+    border-width: 2px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* Animation for highlight updates */
+.email-grammar-highlight {
+  animation: highlightUpdate 0.3s ease-out !important;
+}
+
+@keyframes highlightUpdate {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Prevent text selection on highlights */
+.email-grammar-highlight {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
