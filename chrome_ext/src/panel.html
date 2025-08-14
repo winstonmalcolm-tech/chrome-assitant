@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface with Light/Dark Theme Toggle</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div class="app-container" id="app-container">
+        <div class="chat-container">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="header-left">
+                    <div class="avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="user-info">
+                        <h2>Chat assistant</h2>
+                        <p class="status">Online</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="theme-toggle" class="icon-button">
+                        <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                        </svg>
+                        <svg id="theme-icon-light" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun">
+                            <circle cx="12" cy="12" r="4"/>
+                            <path d="M12 2v2"/>
+                            <path d="M12 20v2"/>
+                            <path d="m4.93 4.93 1.41 1.41"/>
+                            <path d="m17.66 17.66 1.41 1.41"/>
+                            <path d="M2 12h2"/>
+                            <path d="M20 12h2"/>
+                            <path d="m6.34 17.66-1.41 1.41"/>
+                            <path d="m19.07 4.93-1.41 1.41"/>
+                        </svg>
+                    </button>
+                    
+                    <button id="restore-tab" class="icon-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                    </button>
+                    
+                    <button id="chrome-history" class="icon-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                            <path d="M12 7v5l4 2"/>
+                        </svg>
+                        <span class="badge" id="notificationBadge">10</span>
+                    </button>
+
+                    <button id="generate-template" class="icon-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Screen -->
+            <div id="chat-screen" class="screen active">
+                <!-- Messages Container -->
+                <div class="messages-container" id="messages-container">
+                    <div class="message assistant-message">
+                        <div class="message-bubble">
+                            <p>Hello! How can I help you today?</p>
+                            <span class="timestamp" id="initial-timestamp"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <form class="chat-input-form" id="chat-form">
+                    <div class="input-container">
+                        <input
+                            type="text"
+                            id="message-input"
+                            placeholder="Type a message..."
+                            autocomplete="off"
+                        >
+                        
+                        <button type="button" id="voice-toggle" class="icon-button voice-button">
+                            <svg id="mic-on" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic">
+                                <path d="M12 19v3"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <rect x="9" y="2" width="6" height="13" rx="3"/>
+                            </svg>
+                            <svg id="mic-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic-off">
+                                <line x1="2" x2="22" y1="2" y2="22"/>
+                                <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
+                                <path d="M5 10v2a7 7 0 0 0 12 5"/>
+                                <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/>
+                                <path d="M9 9v3a3 3 0 0 0 5.12 2.12"/>
+                                <line x1="12" x2="12" y1="19" y2="22"/>
+                            </svg>
+                        </button>
+                        
+                        <button type="submit" id="send-button" class="send-button" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
+                                <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/>
+                                <path d="m21.854 2.147-10.94 10.939"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Paraphrasing Screen -->
+            <div id="paraphrasing-screen" class="screen">
+                <div class="paraphrasing-container">
+                    <div class="paraphrasing-content">
+                        <h3>Text Paraphrasing</h3>
+                        <p class="paraphrasing-description">Enter text below to get a paraphrased version</p>
+
+                        <div class="paraphrasing-input-section">
+                            <label for="paraphrase-input">Original Text</label>
+                            <textarea
+                                id="paraphrase-input"
+                                placeholder="Enter text to paraphrase..."
+                                rows="4"
+                            ></textarea>
+                        </div>
+
+                        <div class="paraphrasing-style-section">
+                            <label for="paraphrase-style">Paraphrasing Style</label>
+                            <select id="paraphrase-style" class="style-select">
+                                <option value="neutral">Neutral</option>
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                                <option value="academic">Academic</option>
+                                <option value="creative">Creative</option>
+                                <option value="formal">Formal</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="concise">Concise</option>
+                                <option value="detailed">Detailed</option>
+                                <option value="custom">Custom Style</option>
+                            </select>
+
+                            <input
+                                type="text"
+                                id="custom-style-input"
+                                placeholder="Describe how you want it to sound (e.g., 'like a pirate', 'more enthusiastic', 'technical')"
+                                class="custom-style-input hidden"
+                            >
+                        </div>
+
+                        <button id="paraphrase-button" class="paraphrase-button">
+                            Paraphrase Text
+                        </button>
+
+                        <div id="paraphrasing-output-section" class="paraphrasing-output-section hidden">
+                            <label>Paraphrased Text</label>
+                            <div id="paraphrasing-output" class="paraphrasing-output"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Bar -->
+            <div class="navbar">
+                <button id="nav-chat" class="nav-button active" data-screen="chat">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Chat</span>
+                </button>
+                <button id="nav-paraphrasing" class="nav-button" data-screen="paraphrasing">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                        <path d="M10 9H8"/>
+                        <path d="M16 13H8"/>
+                        <path d="M16 17H8"/>
+                    </svg>
+                    <span>Paraphrase</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="/src/panel.js" type="module"></script>
+</body>
+</html>
