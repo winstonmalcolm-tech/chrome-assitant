@@ -2,7 +2,13 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ["firebase/app", "firebase/auth"]
+  },
   build: {
+     commonjsOptions: {
+      include: [/firebase/, /node_modules/]
+    },
     outDir: 'dist',
     rollupOptions: {
       input: {
@@ -11,11 +17,13 @@ export default defineConfig({
         background: resolve(__dirname, 'src/background.js'),
         panel: resolve(__dirname, 'src/panel.html'),
         contentStyle: resolve(__dirname, 'src/content.css'),
-        modalTemplate: resolve(__dirname, 'src/modalTemplate.js')
+        modalTemplate: resolve(__dirname, 'src/modalTemplate.js'),
+        modalTemplateStyle: resolve(__dirname, 'src/modalTemplate.css'),
+        tokenListener: resolve(__dirname, 'src/tokenListener.js')
       },
       output: {
-        entryFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]',
+        entryFileNames: 'src/[name].js',
+        assetFileNames: 'src/[name].[ext]',
         format: 'es',
         manualChunks: undefined,
       },

@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: false;
+}
+
+
+@theme {
+  --color-primary-500: #346FC7;
+  --color-accent: #9EC0F2;
+  --color-foreground: #122239;
+  --color-card: #F4F9FF;
+  --color-subtext: #75889B;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+}
+
+.group:hover .group-hover\:translate-x-1 {
+  transform: translateX(0.25rem);
+}

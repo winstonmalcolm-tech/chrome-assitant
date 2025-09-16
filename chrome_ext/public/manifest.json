@@ -1,21 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "Mic Chat Sidebar",
+  "name": "Alinea AI",
   "version": "1.0",
-  "host_permissions": ["<all_urls>"],
-  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history"],
+  "host_permissions": [
+    "<all_urls>",
+    "https://apis.google.com/*",
+    "https://*.googleapis.com/*",
+    "https://securetoken.googleapis.com/*"
+  ],
+  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history", "identity", "storage"],
   "action": {
     "default_title": "Open Mic Chat"
   },
   "content_scripts": [
+    {
+      "matches":["http://localhost:5173/*"],
+      "js": ["src/tokenListener.js"],
+      "run_at": "document_idle"
+    },
     {
       "matches": [
         "https://mail.google.com/*",
         "https://outlook.live.com/*",
         "https://outlook.office.com/*"
       ],
-      "js": ["assets/content.js"],
-      "css": ["assets/contentStyle.css"],
+      "js": ["src/content.js"],
+      "css": ["src/contentStyle.css"],
       "run_at": "document_idle",
       "type":"module"
     },
@@ -23,7 +33,7 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["assets/selectText.js"],
+      "js": ["src/selectText.js"],
       "run_at": "document_idle",
       "type":"module"
     },
@@ -31,7 +41,8 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["assets/modalTemplate.js"],
+      "js": ["src/modalTemplate.js"],
+      "css": ["src/modalTemplateStyle.css"],
       "run_at": "document_idle",
       "type":"module"
     }
@@ -40,8 +51,22 @@
     "default_path": "src/panel.html",
     "openPanelOnActionClick": true
   },
+  "externally_connectable": {
+    "matches": ["http://localhost:5173/*"]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["modalTemplate.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "background": {
-    "service_worker": "assets/background.js",
+    "service_worker": "src/background.js",
     "type": "module"
+  },
+  "icons": {
+    "16": "alinea_icon_16.png",
+    "48": "alinea_icon_48.png",
+    "128": "alinea_icon_128.png"
   }
 }
