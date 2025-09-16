@@ -60,8 +60,7 @@ class EmailGrammarChecker {
     const fab = document.createElement("button");
     fab.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 18px;">🤖</span>
-        <span style="font-weight: 600; font-size: 14px;">AI Template</span>
+        <span style="font-weight: 600; font-size: 14px;">Generate Email</span>
       </div>
     `;
     fab.className = "email-ai-fab";
@@ -71,7 +70,7 @@ class EmailGrammarChecker {
       bottom: 24px;
       right: 24px;
       z-index: 1000000;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #346FC7;
       color: white;
       border: none;
       border-radius: 28px;
@@ -1333,10 +1332,10 @@ class EmailGrammarChecker {
       align-items: center;
       gap: 8px;
     `;
-    headerTitle.textContent = "🤖 AI Email Template Generator";
+    headerTitle.textContent = "Email Generation";
     const closeModalBtn = document.createElement("button");
     closeModalBtn.className = "close-modal-btn";
-    closeModalBtn.textContent = "×";
+    closeModalBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>';
     closeModalBtn.style.cssText = `
       background: none;
       border: none;
@@ -1480,7 +1479,7 @@ class EmailGrammarChecker {
       padding: 10px 20px;
       border: none;
       border-radius: 6px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #346FC7;
       color: white;
       cursor: pointer;
       font-size: 14px;
@@ -1580,26 +1579,6 @@ class EmailGrammarChecker {
     btnLoading.style.display = "inline-block";
     generateBtn.disabled = true;
     generateBtn.style.cursor = "not-allowed";
-    try {
-      const template = await this.callGeminiAPI(request);
-      if (template) {
-        this.insertTemplate(element, template);
-        this.closeTemplateModal();
-        this.showNotification("Email template generated successfully! ✨", "success");
-      } else {
-        throw new Error("Failed to generate template");
-      }
-    } catch (error) {
-      console.error("Error generating template:", error);
-      this.showNotification("Failed to generate template. Please try again.", "error");
-    } finally {
-      btnText.style.display = "inline-block";
-      btnLoading.style.display = "none";
-      generateBtn.disabled = false;
-      generateBtn.style.cursor = "pointer";
-    }
-  }
-  async callGeminiAPI(request) {
     const prompt = `Generate a professional email based on this request: "${request}"
 
       Format the email exactly like this example structure:
@@ -1624,25 +1603,20 @@ class EmailGrammarChecker {
       - Replace bracketed sections with actual content
 
       Email:`;
-    try {
-      const response = await fetch("http://localhost:3000/ai/generate-template", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt
-        })
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message);
+    chrome.runtime.sendMessage({ action: "EMAIL_GENERATION", prompt }, (response) => {
+      btnText.style.display = "inline-block";
+      btnLoading.style.display = "none";
+      generateBtn.disabled = false;
+      generateBtn.style.cursor = "pointer";
+      if (!response.success) {
+        console.error("Error generating template:", response.error);
+        this.showNotification(response.error, "error");
+        return;
       }
-      return result.message;
-    } catch (error) {
-      console.error("Gemini API call failed:", error);
-      return null;
-    }
+      this.insertTemplate(element, response.data);
+      this.closeTemplateModal();
+      this.showNotification("Email template generated successfully! ✨", "success");
+    });
   }
   htmlToPlainText(html) {
     return html.replace(/<\/p>/g, "\n\n").replace(/<p>/g, "").replace(/<br\s*\/?>/g, "\n").replace(/<\/div>/g, "\n").replace(/<div>/g, "").replace(/<[^>]*>/g, "").replace(/\n{3,}/g, "\n\n").trim();

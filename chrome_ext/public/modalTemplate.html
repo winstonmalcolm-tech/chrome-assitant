@@ -1,0 +1,60 @@
+<!-- template-generator-modal.html -->
+<div id="template-generator-modal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Document Template Generator</h2>
+      <button class="close-btn">×</button>
+    </div>
+
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="input">Create Prompt</button>
+        <button class="tab-btn" data-tab="output">Generated Template</button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Input Tab -->
+        <div id="input-tab" class="tab-pane active">
+          <div class="input-section">
+            <label for="prompt-input">Describe the document template you need:</label>
+            <textarea
+              id="prompt-input"
+              placeholder="Example: Create a professional business proposal template with sections for executive summary, project description, timeline, and budget..."
+              rows="8"
+            ></textarea>
+
+            <div class="button-group">
+              <button id="generate-btn" class="primary-btn">
+                <span class="btn-text">Generate Template</span>
+                <span class="loading-spinner" style="display: none;">⟳</span>
+              </button>
+              <button id="clear-btn" class="secondary-btn">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Tab -->
+        <div id="output-tab" class="tab-pane">
+          <div class="output-section">
+            <div id="template-preview">
+              <div class="empty-state">
+                <div class="empty-icon">📄</div>
+                <h3>No template generated yet</h3>
+                <p>Switch to the "Create Prompt" tab to generate your first template</p>
+              </div>
+            </div>
+
+            <div class="action-buttons" id="action-buttons" style="display: none;">
+              <button class="primary-btn" onclick="copyTemplate()">📋 Copy Template</button>
+              <button class="primary-btn" onclick="downloadTemplate()">⬇️ Download</button>
+              <button class="secondary-btn" onclick="modifyTemplate()">✏️ Modify</button>
+            </div>
+
+            
+          </div>
+        </div>
+      </div>
+      <div id="status-message" class="status-message"></div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-import { marked } from "marked";
-
 // Theme Management
 class ThemeManager {
   constructor() {
@@ -59,23 +56,45 @@ class MessageManager {
     this.isTyping = false
     this.messagesContainer = document.getElementById("messages-container")
     this.isVoiceActive = false
-    this.ai = new GoogleGenAI({apiKey: "AIzaSyD6wTdywF7xH69tzGFTfE3rpSCxA8exmxU"});
+    this.API_BASE = 'http://localhost:3000'
     this.init()
   }
 
   init() {
     this.setInitialTimestamp()
     this.setupMessageInput()
-    this.setupVoiceToggle()
 
     // Chrome extension message listener
     if (typeof window.chrome !== "undefined" && window.chrome.runtime) {
       window.chrome.runtime.onMessage.addListener(this.handleBackgroundListener.bind(this))
     }
 
-    // Add initial assistant message
-    this.createMessage("Hello! How can I help you today?", "assistant")
+    //Add the past messages here
+    chrome.runtime.sendMessage({action: "PAST_MESSAGES"}, (response) => {
+      console.log(response);
+      if (response.success == false) {
+        this.createMessage(response.error, "assistant")
+        return;
+      }
+
+      for (let i=0; i<response.data.length; i++) {
+        this.messages.push({
+          id: response.data[i].id,
+          content: response.data[i].message,
+          sender: (response.data[i].role == "model") ? "assistant" : "user",
+          timestamp: response.data[i].time
+        })
+        this.createMessage(response.data[i].message, (response.data[i].role == "model") ? "assistant" : "user", response.data[i].time, response.data[i].id);
+      }
+
+      // Add initial assistant message
+      (this.messages.length == 0) ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
+    });
+
+    
   }
+
+
 
   handleBackgroundListener(msg, sender, sendResponse) {
     if (msg.action === "selectedWord") {
@@ -100,18 +119,28 @@ class MessageManager {
   }
 
   formatTime(date) {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    const formatted = date.toLocaleString('en-US', {
+      weekday: 'short',   // "Mon"
+      month: 'short',     // "Sep"
+      day: 'numeric',     // "8"
+      year: 'numeric',    // "2025"
+      hour: '2-digit',    // "09"
+      minute: '2-digit',  // "40"
+      hour12: true        // "AM/PM" format
+    });
+
+    return formatted;
   }
 
-  createMessage(content, sender) {
+  createMessage(content, sender, time, id) {
     const messageId = Date.now().toString()
     const timestamp = new Date()
 
     const message = {
-      id: messageId,
+      id: (!id) ? messageId : id,
       content,
       sender,
-      timestamp,
+      timestamp: (!time) ? timestamp : time,
     }
 
     this.messages.push(message)
@@ -211,105 +240,223 @@ class MessageManager {
     // Show typing indicator
     this.showTypingIndicator()
 
-    const response = await this.ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: content
-    });
+    chrome.runtime.sendMessage({action: "CHAT", prompt: content}, (response) => {
+      this.hideTypingIndicator()
 
-    this.hideTypingIndicator()
-
-    this.createMessage(marked(response.text), "assistant")
-  }
-
-  setupVoiceToggle() {
-    const voiceToggle = document.getElementById("voice-toggle")
-    const disableMicIcon = document.getElementById("mic-off")
-    const activeMicIcon = document.getElementById("mic-on")
-
-    voiceToggle.addEventListener("click", () => {
-      this.isVoiceActive = !this.isVoiceActive
-
-      if (this.isVoiceActive) {
-        voiceToggle.classList.add("active")
-        disableMicIcon.classList.add("hidden")
-        activeMicIcon.classList.remove("hidden")
-        console.log("Starting voice recording...")
-        this.startListening()
-      } else {
-        voiceToggle.classList.remove("active")
-        disableMicIcon.classList.remove("hidden")
-        activeMicIcon.classList.add("hidden")
-        console.log("Stopping voice recording...")
-        this.stopListening()
+      if (response.success == false) {
+        this.createMessage(response.error, "assistant");
+        return;
       }
-    })
-  }
 
-  startListening() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      console.error("Speech recognition not supported")
-      return
-    }
-
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        if (!SpeechRecognition) {
-          console.error("Speech recognition not supported")
-          return
-        }
-
-        this.recognition = new SpeechRecognition()
-        this.recognition.continuous = true
-        this.recognition.interimResults = false
-        this.recognition.lang = "en-US"
-
-        this.recognition.onresult = (event) => {
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              const transcript = event.results[i][0].transcript.trim()
-              const messageInput = document.getElementById("message-input")
-              messageInput.value = transcript
-
-              // Enable send button
-              const sendButton = document.getElementById("send-button")
-              sendButton.disabled = false
-            }
-          }
-        }
-
-        this.recognition.onerror = (event) => {
-          console.error("Speech recognition error:", event.error)
-        }
-
-        this.recognition.start()
-      })
-      .catch((err) => {
-        console.error("Mic access denied:", err.message)
-        alert("Microphone access denied. Please allow microphone access to use voice input.")
-      })
-  }
-
-  stopListening() {
-    if (this.recognition) {
-      this.recognition.stop()
-      this.recognition = null
-    }
+      this.createMessage(response.data, "assistant")
+    });
   }
 }
 
+// Simple Account Management - Sign In Button Only
+class AccountManager {
+  constructor() {
+    this.isLoggedIn = false
+    this.userData = null
+    this.errorMessage = "";
+    this.SIGNIN_URL = 'http://localhost:5173/signin' // Replace with your actual sign-in URL
+    this.init()
+  }
+
+  init() {
+    this.bindEvents()
+    this.checkAuthStatus()
+    this.updateUI()
+    window.chrome.runtime.onMessage.addListener(this.handleBackgroundListener.bind(this))
+  }
+
+  handleBackgroundListener(msg, sender, sendResponse) {
+    if (msg.action === "EXT_LOGOUT") {
+      this.isLoggedIn = false
+      this.userData = null
+      this.updateUI()
+    } 
+}
+
+  async checkAuthStatus() {
+    chrome.storage.local.get(["authTokens"], (result) => {
+      const token = result.authTokens;
+      
+      if (token == null) {
+        return;
+      }
+
+      chrome.runtime.sendMessage({action: "FETCH_USER"}, (response) => {
+        if (response.success == false) {
+          this.errorMessage = response.error;
+          return;
+        }
+        console.log(response.data);
+        this.userData = response.data
+        this.isLoggedIn = true;
+        this.updateUI();
+      });
+    });
+  }
+
+
+  bindEvents() {
+    // Sign In button
+    const signinButton = document.getElementById('signin-button')
+    if (signinButton) {
+      signinButton.addEventListener('click', () => this.handleSignIn())
+    }
+
+    // Logout button
+    const logoutButton = document.getElementById('logout-btn')
+    if (logoutButton) {
+      logoutButton.addEventListener('click', () => this.handleLogout())
+    }
+
+    // Upgrade button
+    const upgradeButton = document.getElementById('upgrade-btn')
+    if (upgradeButton) {
+      upgradeButton.addEventListener('click', () => this.handleUpgrade())
+    }
+
+    // Listen for storage changes (in case user signs in from another tab)
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && (changes.authTokens)) {
+          this.checkAuthStatus()
+        }
+      })
+    }
+  }
+
+  handleSignIn() {
+    chrome.tabs.create({ url: this.SIGNIN_URL })
+  }
+
+  handleAuthSuccess(userData) {
+    this.userData = userData
+    this.isLoggedIn = true
+    
+    // Update UI
+    this.updateUI()
+  }
+
+  handleLogout() {
+    // Open upgrade page in new tab
+    const upgradeUrl = 'http://localhost:5173/dashboard'
+    
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: upgradeUrl })
+    } else {
+      window.open(upgradeUrl, '_blank')
+    }
+  }
+
+  handleUpgrade() {
+    // Open upgrade page in new tab
+    const upgradeUrl = 'http://localhost:5173/dashboard'
+    
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: upgradeUrl })
+    } else {
+      window.open(upgradeUrl, '_blank')
+    }
+  }
+
+  updateUI() {
+    const signinState = document.getElementById('signin-state')
+    const profileState = document.getElementById('profile-state')
+
+    if (this.isLoggedIn && this.userData) {
+      // Show profile state
+      if (signinState) signinState.classList.remove('active')
+      if (profileState) profileState.classList.add('active')
+
+      // Update profile information
+      this.updateProfileDisplay()
+    } else {
+      // Show sign-in state
+      if (profileState) profileState.classList.remove('active')
+      if (signinState) signinState.classList.add('active')
+    }
+  }
+
+  updateProfileDisplay() {
+    if (!this.userData) return
+
+    // Update user name
+    const userName = document.getElementById('user-name')
+    if (userName) {
+      userName.textContent = this.userData.username || 'User'
+    }
+
+    // Update user email
+    const userEmail = document.getElementById('user-email')
+    if (userEmail) {
+      userEmail.textContent = this.userData.email || ''
+    }
+
+    // Update avatar
+    const userAvatar = document.getElementById('user-avatar')
+    const avatarFallback = document.getElementById('avatar-fallback')
+    
+    if (userAvatar && avatarFallback) {
+      if (this.userData.avatar) {
+        userAvatar.src = this.userData.avatar
+        userAvatar.style.display = 'block'
+        avatarFallback.style.display = 'none'
+      } else {
+        userAvatar.style.display = 'none'
+        avatarFallback.style.display = 'flex'
+        const displayName = this.userData.username || this.userData.email || 'U'
+        avatarFallback.textContent = displayName.charAt(0).toUpperCase()
+      }
+    }
+
+    // Update plan display
+    const planDisplay = document.getElementById('plan-display')
+    const upgradeBtn = document.getElementById('upgrade-btn')
+    
+    if (planDisplay) {
+      if (this.userData.plan_name.toLowerCase() === 'pro plan') {
+        planDisplay.textContent = 'Pro Plan • Unlimited prompts'
+        planDisplay.style.backgroundColor = '#10b981'
+        planDisplay.style.color = 'white'
+        
+        // Hide upgrade button for pro users
+        if (upgradeBtn) upgradeBtn.style.display = 'none'
+      } else {
+        const promptsRemaining = parseInt(this.userData.token_quota) - parseInt(this.userData.total_tokens) || 0
+        planDisplay.textContent = `Free Plan • ${(promptsRemaining) < 0 ? 0 : promptsRemaining} prompts remaining`
+        planDisplay.style.backgroundColor = '#f8fafc'
+        planDisplay.style.color = '#94a3b8'
+        
+        // Show upgrade button for free users
+        if (upgradeBtn) upgradeBtn.style.display = 'flex'
+      }
+    }
+  }
+
+  // Public API methods for external integration
+  isUserLoggedIn() {
+    return this.isLoggedIn
+  }
+
+  getUserData() {
+    return this.userData
+  }
+}
 
 // Enhanced Chat Interface with all features
 class ChatInterface {
   constructor() {
     this.currentScreen = "chat"
     this.paraphraseStyle = "neutral"
-    this.ai = new GoogleGenAI({apiKey: "AIzaSyD6wTdywF7xH69tzGFTfE3rpSCxA8exmxU"});
 
     // Initialize managers
     this.themeManager = new ThemeManager()
     this.messageManager = new MessageManager()
+    this.accountManager = new AccountManager()
 
     this.init()
   }
@@ -332,19 +479,53 @@ class ChatInterface {
     })
 
     // Paraphrasing functionality
-    document.getElementById("paraphrase-style").addEventListener("change", (e) => {
-      this.handleParaphraseStyleChange(e.target.value)
-    })
+    const paraphraseStyleSelect = document.getElementById("paraphrase-style")
+    if (paraphraseStyleSelect) {
+      paraphraseStyleSelect.addEventListener("change", (e) => {
+        this.handleParaphraseStyleChange(e.target.value)
+      })
+    }
 
-    document.getElementById("paraphrase-button").addEventListener("click", () => {
-      this.handleParaphrase()
-    })
+    const paraphraseButton = document.getElementById("paraphrase-button")
+    if (paraphraseButton) {
+      paraphraseButton.addEventListener("click", () => {
+        this.handleParaphrase()
+      })
+    }
 
-    document.getElementById('generate-template').addEventListener('click', async () => {
-      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {action: 'openModal'});
+    const generateTemplateBtn = document.getElementById('generate-template')
+    
+    if (generateTemplateBtn) {
+      generateTemplateBtn.addEventListener('click', () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          const activeTab = tabs[0];
+          const isGoogleDocs = activeTab.url?.startsWith("https://docs.google.com/document");
+
+          if (isGoogleDocs) {
+            // Already on Google Docs — send message directly
+            chrome.tabs.sendMessage(activeTab.id, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
+              console.log("Response from content script:", response);
+            });
+          } else {
+            // Not on Google Docs — open a new tab
+            chrome.tabs.create({ url: "https://docs.google.com/document/u/0/" }, (newTab) => {
+              // Wait for the tab to finish loading before messaging
+              chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                if (tabId === newTab.id && info.status === "complete") {
+                  chrome.tabs.sendMessage(tabId, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
+                    console.log("Response from content script (new tab):", response);
+                  });
+
+                  // Clean up the listener
+                  chrome.tabs.onUpdated.removeListener(listener);
+                }
+              });
+            });
+          }
+        });
       });
-    });
+    }
+    
   }
 
   switchScreen(screenName) {
@@ -354,13 +535,19 @@ class ChatInterface {
     })
 
     // Show selected screen
-    document.getElementById(`${screenName}-screen`).classList.add("active")
+    const targetScreen = document.getElementById(`${screenName}-screen`)
+    if (targetScreen) {
+      targetScreen.classList.add("active")
+    }
 
     // Update navigation buttons
     document.querySelectorAll(".nav-button").forEach((button) => {
       button.classList.remove("active")
     })
-    document.querySelector(`[data-screen="${screenName}"]`).classList.add("active")
+    const targetNavButton = document.querySelector(`[data-screen="${screenName}"]`)
+    if (targetNavButton) {
+      targetNavButton.classList.add("active")
+    }
 
     this.currentScreen = screenName
   }
@@ -369,10 +556,12 @@ class ChatInterface {
     this.paraphraseStyle = style
     const customInput = document.getElementById("custom-style-input")
 
-    if (style === "custom") {
-      customInput.classList.remove("hidden")
-    } else {
-      customInput.classList.add("hidden")
+    if (customInput) {
+      if (style === "custom") {
+        customInput.classList.remove("hidden")
+      } else {
+        customInput.classList.add("hidden")
+      }
     }
   }
 
@@ -383,13 +572,15 @@ class ChatInterface {
     const output = document.getElementById("paraphrasing-output")
     const customStyleInput = document.getElementById("custom-style-input")
 
+    if (!input || !button || !outputSection || !output) return
+
     const text = input.value.trim()
     if (!text) return
 
     button.disabled = true
     button.textContent = "Paraphrasing..."
 
-    const styleInstruction = this.paraphraseStyle === "custom" ? customStyleInput.value : this.paraphraseStyle
+    const styleInstruction = this.paraphraseStyle === "custom" && customStyleInput ? customStyleInput.value : this.paraphraseStyle
 
     const prompt = `
       Task: Paraphrase the following text to match a specific writing style.
@@ -406,28 +597,19 @@ class ChatInterface {
       - Reflect the tone, vocabulary, and sentence structure.
     `;
 
+    chrome.runtime.sendMessage({action: "PARAPHRASE", prompt: prompt}, (response) => {
+      console.log(response);
+      button.disabled = false
+      button.textContent = "Paraphrase Text"
+      outputSection.classList.remove("hidden")
 
-    const response = await fetch("http://localhost:3000/ai/generate-template", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt
-        })
-      });
+      if (response.success == false) {
+        output.innerHTML = response.error;
+        return;
+      }
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message);
-    }
-
-    output.innerHTML = result.message;
-    outputSection.classList.remove("hidden")
-
-    button.disabled = false
-    button.textContent = "Paraphrase Text"
+      output.innerHTML = response.data;
+    });
   }
 
   // Chrome Extension specific features
@@ -435,8 +617,8 @@ class ChatInterface {
     const openHistoryBtn = document.getElementById("chrome-history")
     if (openHistoryBtn) {
       openHistoryBtn.addEventListener("click", () => {
-        if (typeof window.chrome !== "undefined" && window.chrome.tabs) {
-          window.chrome.tabs.create({ url: "chrome://history" })
+        if (typeof chrome !== "undefined" && chrome.tabs) {
+          chrome.tabs.create({ url: "chrome://history" })
         }
       })
     }
@@ -446,47 +628,17 @@ class ChatInterface {
     const restoreTabBtn = document.getElementById("restore-tab")
     if (restoreTabBtn) {
       restoreTabBtn.addEventListener("click", () => {
-        if (typeof window.chrome !== "undefined" && window.chrome.runtime) {
-          window.chrome.runtime.sendMessage({ action: "restore-last-closed-tab" })
+        if (typeof chrome !== "undefined" && chrome.runtime) {
+          chrome.runtime.sendMessage({ action: "restore-last-closed-tab" })
         }
       })
     }
   }
 
   setNumberHistoryLinks() {
-    const notificationBadgeEle = document.getElementById("notificationBadge")
-    if (!notificationBadgeEle) return
-
-    if (typeof window.chrome !== "undefined" && window.chrome.history) {
-      const historyCountPromise = new Promise((resolve, reject) => {
-        window.chrome.history.search(
-          {
-            text: "",
-            startTime: 0,
-            maxResults: 100000,
-          },
-          (results) => {
-            if (window.chrome.runtime.lastError) {
-              reject(window.chrome.runtime.lastError)
-            } else {
-              resolve(results.length)
-            }
-          },
-        )
-      })
-      ;(async () => {
-        try {
-          const count = await historyCountPromise
-          notificationBadgeEle.textContent = count > 99 ? "99+" : count
-        } catch (err) {
-          notificationBadgeEle.textContent = "0"
-          console.error("❌ History API error:", err)
-        }
-      })()
-    } else {
-      // Fallback for non-extension environment
-      notificationBadgeEle.textContent = "10"
-    }
+    chrome.history.search({ text: "", maxResults: 1000 }, (results) => {
+      document.getElementById("notificationBadge").textContent = results.length > 99 ? "99+" : results.length;
+    });
   }
 }
 
