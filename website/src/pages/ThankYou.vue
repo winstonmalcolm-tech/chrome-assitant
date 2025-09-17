@@ -1,18 +1,6 @@
 <script setup>
-  import { ref, onMounted } from 'vue';
-  import { useRoute, RouterLink } from 'vue-router';
-  import { useUserStore } from '@/stores/user';
-  import { Chromium } from 'lucide-vue-next';
-  import { LoaderCircle, CheckCircle } from 'lucide-vue-next';
-
-  const route = useRoute();
-  const loading = ref(true);
-  const success = ref(false);
-  const userStore = useUserStore();
-
-  onMounted(async () => {
-    
-  });
+  import logo from "@/assets/alinea_icon.png";
+  import { CheckCircle } from 'lucide-vue-next';
 
 </script>
 
@@ -24,8 +12,8 @@
       <div class="flex flex-col items-center justify-center gap-2">
         <CheckCircle class="w-8 h-8 text-green-400" />
         <div class="flex items-center justify-center gap-2 mb-8">
-          <Chromium class="h-12 w-12 text-primary-500"/>
-          <h1 class="text-2xl font-bold text-foreground">Tatalina AI</h1>
+          <img :src="logo" alt="logo" class="w-16 h-12">
+          <h1 class="text-2xl font-bold text-foreground">Alinea AI</h1>
         </div>
       </div>
       
