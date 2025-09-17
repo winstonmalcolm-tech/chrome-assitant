@@ -10,21 +10,31 @@ const webhook = async (req, res) => {
     console.log(`Webhook received: ${event} for user ${userId}`);
 
     switch (event) {
-    case 'payment_succeeded':
-      console.log("Payment succeeded");
-      break;
-    case 'subscription_created':
-      console.log("subscription created");
-      break;
-    case 'subscription_payment_succeeded':
-      console.log("subscription_payment_succeeded");
-      break;
-      
+      case 'subscription_payment_succeeded':
+        // A subscription payment succeeded
+        console.log('Payment succeeded:', paddleData);
+        break;
 
-    case 'subscription_cancelled':
-      // Handle subscription cancellation
-      break;
-  }
+      case 'subscription_cancelled':
+        // Subscription was cancelled
+        console.log('Subscription cancelled:', paddleData);
+        break;
+
+      case 'subscription_payment_failed':
+        console.log('Payment failed:', paddleData);
+        break;
+
+      case 'subscription_created':
+        console.log('New subscription created:', paddleData);
+        break;
+
+      case 'subscription_updated':
+        console.log('Subscription updated:', paddleData);
+        break;
+
+      default:
+        console.log('Unhandled webhook type:', alertName);
+    }
 
   } catch(error) {
      res.status(500).json({ error: 'Failed to create checkout session' });
