@@ -3,6 +3,8 @@
   import Auth from '@/services/auth';
   import { LoaderCircle, Crown, Calendar, CheckCircle, TrendingUp, Users } from 'lucide-vue-next';
   import { useUserStore } from '@/stores/user';
+  import { initializePaddle } from '@paddle/paddle-js';
+  import { jwtDecode } from "jwt-decode";
 
   const data = reactive({
     user: {},
@@ -15,6 +17,12 @@
 
   const auth = new Auth();
   const userStore = useUserStore();
+
+  const paddle = await initializePaddle({
+    environment: 'sandbox', // or 'production'
+    token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
+  });
+
 
   const getStatusColor = (status) => {
     if (typeof status !== 'string') return "bg-gray-100 text-gray-800 border-gray-200"
@@ -31,9 +39,18 @@
   }
 
   const handleUpgrade = () => {
-    const passThrough = JSON.stringify({userId: userStore.userId});
+    const id = jwtDecode(JSON.parse(localStorage.getItem("jwt")).accessToken).userId;
 
-    window.location.href = `https://sandbox-pay.paddle.io/hsc_01k3rjk2rttswazswp0wa2kpbz_hd1049n8n0gm475mw2hn5kq3h9eabvn3?passthrough=${passThrough}`;
+    paddle.Checkout.open({
+      items: [{ priceId: 'pri_01k3pcwn1kawc8vha7p99n443k', quantity: 1 }],
+      customData: {
+        userId: id,
+      },
+      redirectUrl: 'https://alinea-ai.netlify.app/thank-you'
+    })
+    // const passThrough = JSON.stringify({userId: userStore.userId});
+
+    // window.location.href = `https://sandbox-pay.paddle.io/hsc_01k3rjk2rttswazswp0wa2kpbz_hd1049n8n0gm475mw2hn5kq3h9eabvn3`;
     
   }
 
