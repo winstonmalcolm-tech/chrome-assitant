@@ -18,10 +18,6 @@
   const auth = new Auth();
   const userStore = useUserStore();
 
-  const paddle = await initializePaddle({
-    environment: 'sandbox', // or 'production'
-    token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
-  });
 
 
   const getStatusColor = (status) => {
@@ -38,7 +34,12 @@
     }
   }
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
+    const paddle = await initializePaddle({
+        environment: 'sandbox', // or 'production'
+        token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
+      })
+
     const id = jwtDecode(JSON.parse(localStorage.getItem("jwt")).accessToken).userId;
 
     paddle.Checkout.open({
