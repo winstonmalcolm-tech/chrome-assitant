@@ -8,11 +8,44 @@ const normalizeDate = (isoString) => {
 
 
 
+const cancelSubscription = async (req, res) => {
+  //https://sandbox-api.paddle.com/
+  //https://api.paddle.com/subscriptions/{subscription_id}/cancel
+  try {
+    const userId = req.user.userId;
+
+    let sql = `
+      SELECT paddle_subscription_id FROM user_subscriptions_tbl WHERE user_id = ?
+    `;
+
+    const [rows] = await pool.query(sql, [userId]);
+
+    const subId = rows[0].paddle_subscription_id;
+
+    await fetch(`https://sandbox-api.paddle.com/subscriptions/${subId}/cancel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    });
+
+    res.status(200).json({success: true, message: "Cancel successful, subscription will stop at the next billing period"});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({success: false, message: "Server Error"});
+  }
+
+}
+
+
 const webhook = async (req, res) => {
 
   try {
     const payload = req.body;
-
+    
     const event = payload.event_type;
     const data = payload.data;
     const userId = payload.data.custom_data.userId;
@@ -80,7 +113,7 @@ const webhook = async (req, res) => {
         console.log('Subscription updated:', payload);
         break;
 
-      case 'subscription.cancelled':
+      case 'subscription.canceled':
         // Subscription was cancelled
         sql = `
           UPDATE user_subscriptions_tbl
@@ -151,5 +184,6 @@ const webhook = async (req, res) => {
 
 
 export {
-  webhook
+  webhook,
+  cancelSubscription
 }

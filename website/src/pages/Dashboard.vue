@@ -1,10 +1,12 @@
 <script setup>
   import { onMounted, reactive, ref } from 'vue';
   import Auth from '@/services/auth';
+  import Pay from '@/services/pay';
   import { LoaderCircle, Crown, Calendar, CheckCircle, TrendingUp, Users } from 'lucide-vue-next';
-  import { useUserStore } from '@/stores/user';
   import { initializePaddle } from '@paddle/paddle-js';
   import { jwtDecode } from "jwt-decode";
+  import ConfirmModal from '@/components/ConfirmModal.vue';
+
 
   const data = reactive({
     user: {},
@@ -13,12 +15,12 @@
   });
 
   const memberSince = ref('');
+  const next_bill_date = ref('');
   const displayRemainingTokens = ref(0);
+  const showConfirmModal = ref(false);
 
   const auth = new Auth();
-  const userStore = useUserStore();
-
-
+  const pay = new Pay();
 
   const getStatusColor = (status) => {
     if (typeof status !== 'string') return "bg-gray-100 text-gray-800 border-gray-200"
@@ -34,15 +36,24 @@
     }
   }
 
-  const handleCancel = async () => {
-    const paddle = await initializePaddle({
-      environment: 'sandbox', // or 'production'
-      token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
-    })
+  const handleOpenModal = () => {
+    showConfirmModal.value = !showConfirmModal.value;
+  }
 
-    paddle.Retain.initCancellationFlow({
-      subscriptionId: data.user.paddle_subscription_id,
-    })
+  const handleCancel = async () => {
+    try {
+      const result = await pay.cancel();
+
+      if (result.success) {
+        alert(result.message);
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+
   }
 
   const handleUpgrade = async () => {
@@ -86,9 +97,13 @@
      const remainingTokens = data.user.token_quota - data.user.total_tokens;
      displayRemainingTokens.value = (parseInt(remainingTokens) < 0) ? 0 : remainingTokens;
 
-     const date = new Date(data.user.created_at);
-     const formatted = date.toISOString().split("T")[0];
+     let date = new Date(data.user.created_at);
+     let formatted = date.toISOString().split("T")[0];
      memberSince.value = formatted
+
+     date = data.user.next_bill_date ? new Date(data.user.next_bill_date) : null;
+     formatted = date ? date.toISOString().split("T")[0] : "N/A";
+     next_bill_date.value = formatted;
 
     } catch (error) {
       data.error = error.message;
@@ -114,6 +129,8 @@
       <h1 class="text-3xl font-bold text-foreground mb-2">Welcome back, {{ data.user.username }} </h1>
       <p className="text-muted-foreground">Manage your subscription and view your usage statistics</p>
     </header> 
+
+    <ConfirmModal v-if="showConfirmModal" />
 
     <div class="grid grid-cols-[60%_40%] gap-5">
       
@@ -143,7 +160,7 @@
 
               <div class="flex items-center gap-2">
                 <Calendar class="w-4 h-4" />
-                <p>Next Billing: {{ data.user.next_bill_date || "N/A" }}</p>
+                <p>Next Billing: {{ next_bill_date }}</p>
               </div>
             </div>
 
