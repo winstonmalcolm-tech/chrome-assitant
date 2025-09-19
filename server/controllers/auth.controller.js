@@ -182,6 +182,7 @@ class AuthController {
                   sub.status, 
                   sub.start_date, 
                   sub.next_bill_date, 
+                  sub.paddle_subscription_id,
                   token.total_tokens
                 FROM 
                   users_tbl AS u

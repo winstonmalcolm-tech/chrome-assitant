@@ -3,7 +3,6 @@ import { marked } from "marked";
 import pool from "../database/db.js";
 import {updateTokenUsage} from "../utils/updateTokenUsage.js";
 
-
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 const chatAI = async (req, res) => {

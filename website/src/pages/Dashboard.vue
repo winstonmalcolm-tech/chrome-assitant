@@ -34,6 +34,17 @@
     }
   }
 
+  const handleCancel = async () => {
+    const paddle = await initializePaddle({
+      environment: 'sandbox', // or 'production'
+      token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
+    })
+
+    paddle.Retain.initCancellationFlow({
+      subscriptionId: data.user.paddle_subscription_id,
+    })
+  }
+
   const handleUpgrade = async () => {
     const paddle = await initializePaddle({
         environment: 'sandbox', // or 'production'
@@ -132,14 +143,14 @@
 
               <div class="flex items-center gap-2">
                 <Calendar class="w-4 h-4" />
-                <p>Next Billing: {{ data.user.next_bill_data || "N/A" }}</p>
+                <p>Next Billing: {{ data.user.next_bill_date || "N/A" }}</p>
               </div>
             </div>
 
             <!-- Column 2 -->
             <div class="flex flex-col items-center gap-2">
               <button v-if="data.user.plan_name.toLowerCase() == 'free plan'" @click="handleUpgrade()" class="bg-primary-500 w-full p-2 rounded-lg text-white flex items-center justify-center gap-2 hover:bg-blue-500 transition duration-300 cursor-pointer"><TrendingUp class="w-4 h-4" /> Upgrade to Pro</button>
-              <button v-else class="hover:text-red-400 cursor-pointer transition duration-300">Cancel Subscription</button>
+              <button v-else class="hover:text-red-400 cursor-pointer transition duration-300" @click="handleCancel()">Cancel Subscription</button>
             </div>
           </div>
         </div>
