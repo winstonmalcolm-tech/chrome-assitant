@@ -49,12 +49,16 @@
       },
       redirectUrl: 'https://alinea-ai.netlify.app/thank-you'
     })
+
+    paddle.Checkout.on('checkout.completed', (event) => {
+      window.location.href = 'https://alinea-ai.netlify.app/thank-you';
+    });
+
     // const passThrough = JSON.stringify({userId: userStore.userId});
 
     // window.location.href = `https://sandbox-pay.paddle.io/hsc_01k3rjk2rttswazswp0wa2kpbz_hd1049n8n0gm475mw2hn5kq3h9eabvn3`;
     
   }
-
   
   onMounted(async () => {
 
