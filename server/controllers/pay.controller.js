@@ -22,7 +22,7 @@ const cancelSubscription = async (req, res) => {
 
     const subId = rows[0].paddle_subscription_id;
 
-    await fetch(`https://sandbox-api.paddle.com/subscriptions/${subId}/cancel`, {
+    const response = await fetch(`https://sandbox-api.paddle.com/subscriptions/${subId}/cancel`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
@@ -31,15 +31,78 @@ const cancelSubscription = async (req, res) => {
       }
     });
 
+    const result = await response.json();
+
+
+    sql = `
+      UPDATE user_subscriptions_tbl
+      SET cancel_at = ?, 
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?;
+    `;
+
+    await pool.query(sql, [normalizeDate(result.data.scheduled_change.effective_at), userId]);
+
     res.status(200).json({success: true, message: "Cancel successful, subscription will stop at the next billing period"});
 
   } catch (error) {
     console.log(error);
     res.status(500).json({success: false, message: "Server Error"});
   }
-
 }
 
+
+const resumeSubscription = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // 1. Get Paddle subscription ID
+    let sql = `
+      SELECT paddle_subscription_id FROM user_subscriptions_tbl WHERE user_id = ?
+    `;
+    const [rows] = await pool.query(sql, [userId]);
+    const subId = rows[0]?.paddle_subscription_id;
+
+    if (!subId) {
+      return res.status(404).json({ success: false, message: "Subscription not found" });
+    }
+
+    // 2. Call Paddle Update API to clear scheduled cancellation
+    const response = await fetch(`https://sandbox-api.paddle.com/subscriptions/${subId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({
+        // Set cancel_url or scheduled_change to null to remove scheduled cancellation
+        scheduled_change: null
+      })
+    });
+
+    const result = await response.json();
+  
+    if (!response.ok) {
+      return res.status(400).json({ success: false, message: result.error?.message || "Failed to resume subscription" });
+    }
+
+    // 3. Update your DB
+    sql = `
+      UPDATE user_subscriptions_tbl
+      SET cancel_at = NULL,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?;
+    `;
+    await pool.query(sql, [userId]);
+
+    res.status(200).json({ success: true, message: "Subscription resumed successfully" });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
 
 const webhook = async (req, res) => {
 
@@ -56,13 +119,13 @@ const webhook = async (req, res) => {
       case 'subscription.payment_succeeded':
         // A subscription payment succeeded
         sql = `UPDATE user_subscriptions_tbl
-                SET status = ?, 
-                    next_bill_date = ?, 
+                SET next_bill_date = ?, 
                     updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = ?;
               `
 
-        await pool.query(sql, [data.status, normalizeDate(data.next_billed_at), userId])
+        await pool.query(sql, [normalizeDate(data.next_billed_at), userId])
+
         console.log('Payment succeeded:', data);
         break;
 
@@ -86,7 +149,7 @@ const webhook = async (req, res) => {
           UPDATE user_subscriptions_tbl
           SET status = ?, 
               start_date = ?, 
-              paddle_subscription_id = ?
+              paddle_subscription_id = ?,
               plan_id = ?, 
               paddle_customer_id = ?, 
               is_recurring = ?, 
@@ -101,15 +164,13 @@ const webhook = async (req, res) => {
 
       case 'subscription.updated':
         // Subscription updated
-
         sql = `
           UPDATE user_subscriptions_tbl
-          SET plan_id = ?, 
-              next_bill_date = ?, 
+          SET next_bill_date = ?, 
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = ?;        
         `
-        await pool.query(sql, [2, normalizeDate(data.next_billed_at), userId]);
+        await pool.query(sql, [normalizeDate(data.next_billed_at), userId]);
         console.log('Subscription updated:', payload);
         break;
 
@@ -117,12 +178,15 @@ const webhook = async (req, res) => {
         // Subscription was cancelled
         sql = `
           UPDATE user_subscriptions_tbl
-          SET status = ?, 
-              cancel_at = ?, 
+          SET plan_id = ?
+              status = ?, 
+              cancel_at = ?,
+              next_bill_date = ?, 
               updated_at = CURRENT_TIMESTAMP
           WHERE user_id = ?;
         `
-        await pool.query(sql, [data.status, normalizeDate(data.canceled_at), userId]);
+        await pool.query(sql, [1, "active", null, null, userId]);
+
         console.log('Subscription cancelled:', payload);
         break;
 
@@ -164,7 +228,14 @@ const webhook = async (req, res) => {
           WHERE user_id = ?;
         `
 
-        await pool.query(sql, [data.status, normalizeDate(data.started_at), normalizeDate(data.next_billed_at), userId])
+        await pool.query(sql, [data.status, normalizeDate(data.started_at), normalizeDate(data.next_billed_at), userId]);
+
+        sql = `
+          INSERT INTO token_usage_tbl
+          (user_id, usage_start, usage_end, total_tokens)
+          VALUES (?, ?, ?, ?);
+        `
+        await pool.query(sql, [userId, normalizeDate(data.started_at), normalizeDate(data.next_billed_at), 0]);
         console.log('Subscription Activated', payload);
         break;
 
@@ -185,5 +256,6 @@ const webhook = async (req, res) => {
 
 export {
   webhook,
-  cancelSubscription
+  cancelSubscription, 
+  resumeSubscription
 }

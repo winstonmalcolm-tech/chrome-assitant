@@ -1,4 +1,5 @@
 import { saveAs } from 'file-saver';
+import DOMPurify from 'dompurify';
 import {
   Document,
   Packer,
@@ -9,7 +10,6 @@ import {
   TableCell,
   WidthType,
   TextRun,
-  Numbering,
 } from "docx";
 
 // content.js - Document Template Generator Modal
@@ -27,6 +27,22 @@ class SmartTemplateGenerator {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
         document.body.appendChild(wrapper);
+    }
+
+    sanitizeUserInput(input) {
+        // Remove script/style tags, HTML tags, and trim whitespace
+        let sanitized = input.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+                            .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+                            .replace(/<\/?[^>]+(>|$)/g, '')
+                            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
+                            .trim();
+        // Optionally, escape special HTML characters
+        sanitized = sanitized.replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
+        return sanitized;
     }
 
     async openTemplateGeneratorModal() {
@@ -119,8 +135,9 @@ class SmartTemplateGenerator {
             - Do not include commentary, annotations, or explanations.
             - Do not create any section titles or headings unless the user explicitly requests them. Write all text in continuous, natural paragraphs without labeling or numbering any parts.
             - Do not create any headings
+            - Do not create any charts, if requested, just describe them in text.
 
-            Preserve all placeholders exactly as written using double curly braces (e.g., {{clientName}}). Do not reformat or alter them.
+            Preserve all placeholders exactly as written using square brackets (e.g., [clientName]). Do not reformat or alter them.
 
             ---
 
@@ -150,7 +167,7 @@ class SmartTemplateGenerator {
         const preview = document.getElementById('template-preview');
         const actionButtons = document.getElementById('action-buttons');
 
-        preview.innerHTML = `<div class="template-content">${template}</div>`;
+        preview.innerHTML = `<div class="template-content">${DOMPurify.sanitize(template)}</div>`;
         actionButtons.style.display = 'flex';
     }
 
@@ -207,13 +224,6 @@ class SmartTemplateGenerator {
         }
     }
 
-
-    stripHtmlTags(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        return div.textContent || div.innerText || '';
-    }
-
    async downloadTemplate(filename = "document.docx") {
     const parser = new DOMParser();
     const doc = parser.parseFromString(this.currentTemplate, "text/html");
@@ -250,7 +260,7 @@ class SmartTemplateGenerator {
             bold: true,
             }),
         ],
-        });
+    });
 
     // Recursive function to process all nodes, including nested ones
     function processNode(node, children) {
@@ -440,71 +450,6 @@ class SmartTemplateGenerator {
     const blob = await Packer.toBlob(docxDocument);
     saveAs(blob, filename);
     }
-
-    
-    // async downloadTemplate() {
-    //     if (!this.currentTemplate) {
-    //         this.showStatus('No template to download.', 'error');
-    //         return;
-    //     }
-
-    //     try {
-    //         const parser = new DOMParser();
-    //         const htmlDoc = parser.parseFromString(this.currentTemplate, 'text/html');
-
-    //         const docParagraphs = [];
-
-    //         htmlDoc.querySelectorAll('p').forEach(p => {
-    //             const paragraphLines = [];
-
-    //             // Split by <br> and create line-by-line TextRuns
-    //             p.innerHTML.split(/<br\s*\/?>/i).forEach((line, index, arr) => {
-    //                 const text = line.replace(/&nbsp;/g, ' ').trim();
-
-    //                 if (text.length > 0) {
-    //                     paragraphLines.push(new TextRun({
-    //                         text: text,
-    //                         font: "Times New Roman",
-    //                         size: 24,
-    //                     }));
-    //                 }
-
-    //                 // Add a line break between lines (except after the last one)
-    //                 if (index < arr.length - 1) {
-    //                     paragraphLines.push(new TextRun({ break: 1 }));
-    //                 }
-    //             });
-
-    //             docParagraphs.push(new Paragraph({
-    //                 children: paragraphLines,
-    //                 spacing: { after: 200 }, // Add spacing between paragraphs
-    //             }));
-    //         });
-
-    //         const doc = new Document({
-    //             sections: [{
-    //                 properties: {},
-    //                 children: docParagraphs,
-    //             }]
-    //         });
-
-    //         const blob = await Packer.toBlob(doc);
-    //         const url = URL.createObjectURL(blob);
-
-    //         const link = document.createElement('a');
-    //         link.href = url;
-    //         link.download = 'generated_template.docx';
-    //         document.body.appendChild(link);
-    //         link.click();
-    //         document.body.removeChild(link);
-
-    //         URL.revokeObjectURL(url);
-    //         this.showStatus('Word document downloaded successfully!', 'success');
-    //     } catch (error) {
-    //         console.error('Error downloading Word doc:', error);
-    //         this.showStatus('Error downloading Word document.', 'error');
-    //     }
-    // }
 
     modifyTemplate() {
         const promptInput = document.getElementById('prompt-input');
