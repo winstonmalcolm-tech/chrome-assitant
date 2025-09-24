@@ -90,11 +90,23 @@ class MessageManager {
       // Add initial assistant message
       (this.messages.length == 0) ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
     });
-
-    
   }
 
-
+  sanitizeUserInput(input) {
+    // Remove script/style tags, HTML tags, and trim whitespace
+    let sanitized = input.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+                        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+                        .replace(/<\/?[^>]+(>|$)/g, '')
+                        .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
+                        .trim();
+    // Optionally, escape special HTML characters
+    sanitized = sanitized.replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
+    return sanitized;
+  }
 
   handleBackgroundListener(msg, sender, sendResponse) {
     if (msg.action === "selectedWord") {
@@ -234,6 +246,9 @@ class MessageManager {
   }
 
   async sendMessage(content) {
+
+    content = this.sanitizeUserInput(content);
+
     // Add user message
     this.createMessage(content, "user")
 
@@ -574,13 +589,16 @@ class ChatInterface {
 
     if (!input || !button || !outputSection || !output) return
 
-    const text = input.value.trim()
+    let text = input.value.trim()
     if (!text) return
 
     button.disabled = true
     button.textContent = "Paraphrasing..."
 
-    const styleInstruction = this.paraphraseStyle === "custom" && customStyleInput ? customStyleInput.value : this.paraphraseStyle
+    let styleInstruction = this.paraphraseStyle === "custom" && customStyleInput ? customStyleInput.value : this.paraphraseStyle
+
+    text = this.messageManager.sanitizeUserInput(text);
+    styleInstruction = this.messageManager.sanitizeUserInput(styleInstruction);
 
     const prompt = `
       Task: Paraphrase the following text to match a specific writing style.

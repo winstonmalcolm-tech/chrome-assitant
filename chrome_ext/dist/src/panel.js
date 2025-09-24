@@ -103,6 +103,11 @@ class MessageManager {
       this.messages.length == 0 ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
     });
   }
+  sanitizeUserInput(input) {
+    let sanitized = input.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "").replace(/<\/?[^>]+(>|$)/g, "").replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+    sanitized = sanitized.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    return sanitized;
+  }
   handleBackgroundListener(msg, sender, sendResponse) {
     if (msg.action === "selectedWord") {
       console.log("📨 Received text:", msg.text);
@@ -225,6 +230,7 @@ class MessageManager {
     });
   }
   async sendMessage(content) {
+    content = this.sanitizeUserInput(content);
     this.createMessage(content, "user");
     this.showTypingIndicator();
     chrome.runtime.sendMessage({ action: "CHAT", prompt: content }, (response) => {
@@ -478,11 +484,13 @@ class ChatInterface {
     const output = document.getElementById("paraphrasing-output");
     const customStyleInput = document.getElementById("custom-style-input");
     if (!input || !button || !outputSection || !output) return;
-    const text = input.value.trim();
+    let text = input.value.trim();
     if (!text) return;
     button.disabled = true;
     button.textContent = "Paraphrasing...";
-    const styleInstruction = this.paraphraseStyle === "custom" && customStyleInput ? customStyleInput.value : this.paraphraseStyle;
+    let styleInstruction = this.paraphraseStyle === "custom" && customStyleInput ? customStyleInput.value : this.paraphraseStyle;
+    text = this.messageManager.sanitizeUserInput(text);
+    styleInstruction = this.messageManager.sanitizeUserInput(styleInstruction);
     const prompt = `
       Task: Paraphrase the following text to match a specific writing style.
 

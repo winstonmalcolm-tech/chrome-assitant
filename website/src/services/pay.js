@@ -8,13 +8,23 @@ class Pay {
     try {
       const response = await api.post("/pay/cancel");
 
-      return {success: true, data: response.data.message};
+      return {success: true, message: response.data.message};
 
     } catch (error) {
-      console.log(error);
-      return {success: false, message: error.response.data.message};
+      return {success: false, message: "Please try again later, or contact support"};
     }
   }
+
+  async resume() {
+    try {
+      const response = await api.post("/pay/resume");
+      return {success: true, message: response.data.message};
+
+    } catch (error) {
+      return {success: false, message: "Please try again later, or contact support"};
+    }
+  }
+  
 }
 
 export default Pay
