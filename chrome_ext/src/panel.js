@@ -434,7 +434,7 @@ class AccountManager {
     
     if (planDisplay) {
       if (this.userData.plan_name.toLowerCase() === 'pro plan') {
-        planDisplay.textContent = 'Pro Plan • Unlimited prompts'
+        planDisplay.textContent = 'Pro Plan • 6M tokens'
         planDisplay.style.backgroundColor = '#10b981'
         planDisplay.style.color = 'white'
         

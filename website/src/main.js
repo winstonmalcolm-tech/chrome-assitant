@@ -1,45 +1,34 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { useUserStore } from './stores/user';
-import "./style.css";
+import { useDocumentStore } from './stores/document';
+import "./index.css";
 import App from './App.vue'
 import router from './router'
-import { aliases, mdi } from 'vuetify/iconsets/mdi'
-import '@mdi/font/css/materialdesignicons.css';
 
-// Vuetify
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import '@mdi/font/css/materialdesignicons.css';
+import 'quill-mention/autoregister';
+import 'quill-mention/dist/quill.mention.min.css';
+
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
 
 ( 
   function () {
     const app = createApp(App)
 
-    const vuetify = createVuetify({
-      theme:{
-        defaultTheme: 'light'
-      },
-      components,
-      directives,
-      icons: {
-        defaultSet: 'mdi',
-        aliases,
-        sets: {
-          mdi,
-        }
-      }
-    })
 
     app.use(createPinia())
-    app.use(vuetify)
     
     const userStore = useUserStore();
-
-    userStore.init()
+    const documentStore = useDocumentStore();
+     
+    userStore.init();
+    documentStore.loadCurrentDocument();
 
     app.use(router)
+    app.component('QuillEditor', QuillEditor)
 
     app.mount('#app')
   }

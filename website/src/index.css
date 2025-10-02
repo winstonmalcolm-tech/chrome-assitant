@@ -2,9 +2,12 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: ["base"];
+  themes: ["light"];
 }
 
+
+/* @import './styles/_variables.scss';
+@import './styles/_keyframe-animations.scss'; */
 
 @theme {
   --color-primary-500: #346FC7;
