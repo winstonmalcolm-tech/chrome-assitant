@@ -6,7 +6,6 @@ import SignUp from '@/pages/SignUp.vue'
 import Verify from '@/pages/Verify.vue'
 import Privacy from '@/pages/Privacy.vue'
 import TermsOfService from '@/pages/TermsOfService.vue'
-import TextEditor from '@/pages/TextEditor.vue'
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
@@ -43,12 +42,6 @@ const router = createRouter({
       meta: {requiresAuth: true}
     },
     {
-      path: "/text-editor",
-      component: TextEditor,
-      name: "texteditor",
-      meta: {requiresAuth: true}
-    },
-    {
       path: "/verify",
       component: Verify,
       name: "verify",
@@ -67,7 +60,13 @@ const router = createRouter({
       path: "/terms",
       component: TermsOfService,
       name: "terms"
-    }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: Home,
+    },
+
   ],
   scrollBehavior(to, from, savedPosition) {
     // Always scroll to top

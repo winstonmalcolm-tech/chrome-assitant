@@ -62,12 +62,6 @@
       >
       <RouterLink
         v-if="userStore.user"
-        to="/text-editor"
-        :class="['hover:text-primary-500 transition duration-300', route.name == 'texteditor' ? 'text-primary-500' : '']"
-        >Text Editor</RouterLink
-      >
-      <RouterLink
-        v-if="userStore.user"
         to="/dashboard"
         :class="['hover:text-primary-500 transition duration-300', route.name == 'dashboard' ? 'text-primary-500' : '']"
         >Dashboard</RouterLink
