@@ -508,7 +508,6 @@ const templateGenerator = new SmartTemplateGenerator();
 // Hook into Chrome Extension message
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'OPEN_TEMPLATE_GENERATOR') {
-        console.log("MODAL TRIGGER RETRIEVED");
         templateGenerator.openTemplateGeneratorModal();
         sendResponse({ success: true });
     }

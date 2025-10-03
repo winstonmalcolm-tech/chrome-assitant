@@ -1,5 +1,5 @@
 // background.js
-const BASE_SERVER_URL = "http://localhost:3000";
+const BASE_SERVER_URL = "https://chrome-assitant-server.onrender.com";
 
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -8,7 +8,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 //For extension based actions
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.action === "selectionDetected") {
-    console.log("💡 Forwarding selection:", msg.text);
 
     // Forward to the side panel
     chrome.runtime.sendMessage({
@@ -29,8 +28,6 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
         });
 
       } else {
-        console.log("No recently closed tab to restore.");
-
         // Forward to the side panel
         chrome.runtime.sendMessage({
           action: "tabStatus",
@@ -73,8 +70,6 @@ function setTokens(tokens) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     const tokens = await getTokens();
-    console.log(tokens)
-    console.log(typeof tokens);
 
     if (tokens == null) {
       sendResponse({success: false, error: "Please log in"});
@@ -117,7 +112,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       case "PAST_MESSAGES":
         const messageResult = await pastMessages(tokens.accessToken, tokens.refreshToken);
-        console.log(messageResult);
+
         if (!messageResult.success) {
           sendResponse({success: false, error: messageResult.error});
           return; 
@@ -248,7 +243,6 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
     }
 
   } catch (err) {
-    console.log("AI GENERATE DOC ERROR: ", err.message);
     return {success: false, error: "Unknown error" };
   }
 
@@ -310,7 +304,6 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
     }
 
   } catch (err) {
-    console.log("AI EMAIL ERROR: ", err.message);
     return {success: false, error: "Unknown error" };
   }
 
@@ -353,7 +346,6 @@ async function chat(accessToken, refreshToken, userPrompt) {
           return {success: false, error: aiResponse.message};
         }
 
-        console.log("SECOND TRY RESPONSE: ", aiResponse);
         return {success: true, data: aiResponse.response };
 
       } catch (err) {
@@ -368,17 +360,16 @@ async function chat(accessToken, refreshToken, userPrompt) {
     } else if (res.status == 200) {
 
       const aiResponse = await res.json();
-      console.log("FIRST TRY RESPONSE: ", aiResponse);
+
       return { success: true, data: aiResponse.response };
 
     } else {
-      const aiResponse = await res.json();
-      console.log(aiResponse);
+      //const aiResponse = await res.json();
       return {success: false, error: "There is an issue with our Servers" };
     }
 
   } catch (err) {
-    console.log("AI CHATE ERROR: ", err.message);
+
     return {success: false, error: "Unknown error" };
   }
 
@@ -443,13 +434,12 @@ async function paraphrase(accessToken, refreshToken, userPrompt) {
     }   
 
   } catch (err) {
-    console.log("PARAPHRASE ERROR: ", err.message);
     return {success: false, error: "Unknown error" };
   }
 }
 
 function logout() {
-  console.log("TOKEN CLEARED");
+
   chrome.storage.local.clear(() => {
     chrome.runtime.sendMessage({action: "EXT_LOGOUT"});
   })
@@ -501,7 +491,6 @@ async function fetchUserData(accessToken, refreshToken) {
 
 async function refreshAccessToken(refreshToken) {
   try {
-    console.log(refreshToken);
 
     const res = await fetch(`${BASE_SERVER_URL}/auth/refresh`, {
       method: "POST",
@@ -523,15 +512,8 @@ async function refreshAccessToken(refreshToken) {
 // It handles extension lifecycle and could be extended for additional features
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    console.log('Grammar Assistant installed');
+    console.log('Alinea AI installed');
   } else if (details.reason === 'update') {
     console.log('Grammar Assistant updated');
   }
 });
-  //Last resort
-  // if (msg.action == "FETCH_USER") {
-  //   chrome.runtime.sendMessage({
-  //     action: "USER_RESULT",
-  //     data: {"user": "Malx"}
-  //   });
-  // }

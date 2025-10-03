@@ -55,8 +55,6 @@ class MessageManager {
     this.messages = []
     this.isTyping = false
     this.messagesContainer = document.getElementById("messages-container")
-    this.isVoiceActive = false
-    this.API_BASE = 'http://localhost:3000'
     this.init()
   }
 
@@ -71,24 +69,30 @@ class MessageManager {
 
     //Add the past messages here
     chrome.runtime.sendMessage({action: "PAST_MESSAGES"}, (response) => {
-      console.log(response);
-      if (response.success == false) {
-        this.createMessage(response.error, "assistant")
+      try {
+        if (response.success == false) {
+          this.createMessage(response.error, "assistant")
+          return;
+        }
+
+        for (let i=0; i<response.data.length; i++) {
+          this.messages.push({
+            id: response.data[i].id,
+            content: response.data[i].message,
+            sender: (response.data[i].role == "model") ? "assistant" : "user",
+            timestamp: response.data[i].time
+          })
+          this.createMessage(response.data[i].message, (response.data[i].role == "model") ? "assistant" : "user", response.data[i].time, response.data[i].id);
+        }
+
+        // Add initial assistant message
+        (this.messages.length == 0) ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
+
+      } catch (e) {
+        this.createMessage("Error loading past messages. Please try again.", "assistant")
         return;
       }
-
-      for (let i=0; i<response.data.length; i++) {
-        this.messages.push({
-          id: response.data[i].id,
-          content: response.data[i].message,
-          sender: (response.data[i].role == "model") ? "assistant" : "user",
-          timestamp: response.data[i].time
-        })
-        this.createMessage(response.data[i].message, (response.data[i].role == "model") ? "assistant" : "user", response.data[i].time, response.data[i].id);
-      }
-
-      // Add initial assistant message
-      (this.messages.length == 0) ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
+      
     });
   }
 
@@ -110,7 +114,6 @@ class MessageManager {
 
   handleBackgroundListener(msg, sender, sendResponse) {
     if (msg.action === "selectedWord") {
-      console.log("📨 Received text:", msg.text)
       const inputEle = document.getElementById("message-input")
       this.backgroundServiceResponse = msg.text
       inputEle.value = this.backgroundServiceResponse
@@ -274,7 +277,7 @@ class AccountManager {
     this.isLoggedIn = false
     this.userData = null
     this.errorMessage = "";
-    this.SIGNIN_URL = 'http://localhost:5173/signin' // Replace with your actual sign-in URL
+    this.SIGNIN_URL = 'https://alinea-ai.netlify.app/signin' // Replace with your actual sign-in URL
     this.init()
   }
 
@@ -306,7 +309,6 @@ class AccountManager {
           this.errorMessage = response.error;
           return;
         }
-        console.log(response.data);
         this.userData = response.data
         this.isLoggedIn = true;
         this.updateUI();
@@ -481,7 +483,6 @@ class ChatInterface {
     this.restoreTab()
     this.openHistory()
     this.setNumberHistoryLinks()
-    console.log("Chat app initialized successfully!")
   }
 
   setupEventListeners() {
@@ -519,7 +520,6 @@ class ChatInterface {
           if (isGoogleDocs) {
             // Already on Google Docs — send message directly
             chrome.tabs.sendMessage(activeTab.id, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
-              console.log("Response from content script:", response);
             });
           } else {
             // Not on Google Docs — open a new tab
@@ -528,7 +528,7 @@ class ChatInterface {
               chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
                 if (tabId === newTab.id && info.status === "complete") {
                   chrome.tabs.sendMessage(tabId, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
-                    console.log("Response from content script (new tab):", response);
+        
                   });
 
                   // Clean up the listener
@@ -616,7 +616,7 @@ class ChatInterface {
     `;
 
     chrome.runtime.sendMessage({action: "PARAPHRASE", prompt: prompt}, (response) => {
-      console.log(response);
+      
       button.disabled = false
       button.textContent = "Paraphrase Text"
       outputSection.classList.remove("hidden")

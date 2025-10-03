@@ -1,8 +1,7 @@
-const BASE_SERVER_URL = "http://localhost:3000";
+const BASE_SERVER_URL = "https://chrome-assitant-server.onrender.com";
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.action === "selectionDetected") {
-    console.log("💡 Forwarding selection:", msg.text);
     chrome.runtime.sendMessage({
       action: "selectedWord",
       text: msg.text
@@ -17,7 +16,6 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
           text: "Tab restored"
         });
       } else {
-        console.log("No recently closed tab to restore.");
         chrome.runtime.sendMessage({
           action: "tabStatus",
           text: "No recently closed tab"
@@ -51,8 +49,6 @@ function setTokens(tokens) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     const tokens = await getTokens();
-    console.log(tokens);
-    console.log(typeof tokens);
     if (tokens == null) {
       sendResponse({ success: false, error: "Please log in" });
       return true;
@@ -87,7 +83,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         break;
       case "PAST_MESSAGES":
         const messageResult = await pastMessages(tokens.accessToken, tokens.refreshToken);
-        console.log(messageResult);
         if (!messageResult.success) {
           sendResponse({ success: false, error: messageResult.error });
           return;
@@ -189,7 +184,6 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
       return { success: true, data: aiResponse.message };
     }
   } catch (err) {
-    console.log("AI GENERATE DOC ERROR: ", err.message);
     return { success: false, error: "Unknown error" };
   }
 }
@@ -235,7 +229,6 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
       return { success: true, data: aiResponse.message };
     }
   } catch (err) {
-    console.log("AI EMAIL ERROR: ", err.message);
     return { success: false, error: "Unknown error" };
   }
 }
@@ -269,7 +262,6 @@ async function chat(accessToken, refreshToken, userPrompt) {
         if (retryRes.status != 200) {
           return { success: false, error: aiResponse.message };
         }
-        console.log("SECOND TRY RESPONSE: ", aiResponse);
         return { success: true, data: aiResponse.response };
       } catch (err) {
         console.error("Retry failed:", err.message);
@@ -279,15 +271,11 @@ async function chat(accessToken, refreshToken, userPrompt) {
       return { success: false, error: "Token Exceeded, Please upgrade plan" };
     } else if (res.status == 200) {
       const aiResponse = await res.json();
-      console.log("FIRST TRY RESPONSE: ", aiResponse);
       return { success: true, data: aiResponse.response };
     } else {
-      const aiResponse = await res.json();
-      console.log(aiResponse);
       return { success: false, error: "There is an issue with our Servers" };
     }
   } catch (err) {
-    console.log("AI CHATE ERROR: ", err.message);
     return { success: false, error: "Unknown error" };
   }
 }
@@ -333,12 +321,10 @@ async function paraphrase(accessToken, refreshToken, userPrompt) {
       return { success: true, data: paraphrased.message };
     }
   } catch (err) {
-    console.log("PARAPHRASE ERROR: ", err.message);
     return { success: false, error: "Unknown error" };
   }
 }
 function logout() {
-  console.log("TOKEN CLEARED");
   chrome.storage.local.clear(() => {
     chrome.runtime.sendMessage({ action: "EXT_LOGOUT" });
   });
@@ -378,7 +364,6 @@ async function fetchUserData(accessToken, refreshToken) {
 }
 async function refreshAccessToken(refreshToken) {
   try {
-    console.log(refreshToken);
     const res = await fetch(`${BASE_SERVER_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -393,7 +378,7 @@ async function refreshAccessToken(refreshToken) {
 }
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
-    console.log("Grammar Assistant installed");
+    console.log("Alinea AI installed");
   } else if (details.reason === "update") {
     console.log("Grammar Assistant updated");
   }
