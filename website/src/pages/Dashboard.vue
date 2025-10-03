@@ -198,7 +198,7 @@
               class="bg-primary-500 w-full p-2 rounded-lg text-white flex items-center justify-center gap-2 hover:bg-blue-500 transition duration-300 cursor-pointer"
             ><TrendingUp class="w-4 h-4" />Upgrade to Pro</button>
             <button
-              v-if="!data.user.cancel_at"
+              v-if="data.user.cancel_at != null || data.user.plan_name.toLowerCase() != 'free plan'"
               class="hover:text-red-400 cursor-pointer transition duration-300"
               @click="openConfirmModal('cancel')"
             >Cancel Subscription</button>
