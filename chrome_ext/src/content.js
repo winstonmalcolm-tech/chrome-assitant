@@ -6,7 +6,6 @@ class EmailGrammarChecker {
     this.currentProvider = this.detectEmailProvider();
     this.fabVisibilityTimer = null;
 
-    console.log(`Email Grammar Checker initialized for: ${this.currentProvider}`);
     this.init();
   }
 
@@ -103,7 +102,7 @@ class EmailGrammarChecker {
     fab.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('FAB clicked!');
+      
       try {
         let composeElement = this.findReplyBox();
         let isReply = !!composeElement;
@@ -122,8 +121,6 @@ class EmailGrammarChecker {
 
     document.body.appendChild(fab);
     this.floatingActionButton = fab;
-
-    console.log('Floating Action Button created');
   }
 
   // Add this method to your class:
@@ -772,7 +769,7 @@ function initEmailGenerator() {
 
   try {
     window.emailGrammarChecker = new EmailGrammarChecker();
-    console.log('Email Generator initialized successfully');
+  
   } catch (error) {
     console.error('Failed to initialize Email Generator:', error);
   }

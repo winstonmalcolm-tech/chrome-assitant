@@ -38,7 +38,7 @@ const features = ref([
     <!-- Hero Section -->
     <section className="sm:px-6 lg:px-8">
       <div className="container mx-auto max-w-4xl text-center flex flex-col items-center">
-        <Chip page="home" label="Chrome Extension" />
+        <Chip page="home" label="Broswer Extension" />
         <h1 className="mt-2 text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6 text-balance">
           Supercharge Your Browser with <span className="text-primary-500">Professional Tools</span>
         </h1>

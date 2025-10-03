@@ -5,12 +5,10 @@ window.addEventListener("message", (event) => {
     const tokens = event.data.tokens;
     chrome.runtime.sendMessage({ action: "tokens", tokens });
   } else if (event.data?.type === "LOGOUT") {
-
-    console.log("LOG OUT TRIGGERED")
     chrome.runtime.sendMessage({ action: "LOGOUT_BCK"});
 
   } else if (event.data?.type === 'CHECK_EXTENSION') {
-    console.log("CONTENT SCRIPT received the message");
+
     window.postMessage({ from: 'alinea.ai_1289', status: 'installed' }, '*');
   }
 });

@@ -51,12 +51,12 @@
       }
 
       // Check for extension
-      const installed = await isExtensionInstalled();
-      if (!installed) {
-        // Redirect to Chrome Web Store
-        window.open("https://chrome.google.com/webstore/detail/YOUR-EXTENSION-ID-HERE", "_blank");
-        return;
-      }
+      // const installed = await isExtensionInstalled();
+      // if (!installed) {
+      //   // Redirect to Chrome Web Store
+      //   window.open("https://chrome.google.com/webstore/detail/YOUR-EXTENSION-ID-HERE", "_blank");
+      //   return;
+      // }
 
       // Proceed with signup if extension is present
       const result = await auth.signUp(data.name, data.email);

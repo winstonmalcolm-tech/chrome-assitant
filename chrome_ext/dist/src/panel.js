@@ -75,8 +75,6 @@ class MessageManager {
     this.messages = [];
     this.isTyping = false;
     this.messagesContainer = document.getElementById("messages-container");
-    this.isVoiceActive = false;
-    this.API_BASE = "http://localhost:3000";
     this.init();
   }
   init() {
@@ -86,21 +84,25 @@ class MessageManager {
       window.chrome.runtime.onMessage.addListener(this.handleBackgroundListener.bind(this));
     }
     chrome.runtime.sendMessage({ action: "PAST_MESSAGES" }, (response) => {
-      console.log(response);
-      if (response.success == false) {
-        this.createMessage(response.error, "assistant");
+      try {
+        if (response.success == false) {
+          this.createMessage(response.error, "assistant");
+          return;
+        }
+        for (let i = 0; i < response.data.length; i++) {
+          this.messages.push({
+            id: response.data[i].id,
+            content: response.data[i].message,
+            sender: response.data[i].role == "model" ? "assistant" : "user",
+            timestamp: response.data[i].time
+          });
+          this.createMessage(response.data[i].message, response.data[i].role == "model" ? "assistant" : "user", response.data[i].time, response.data[i].id);
+        }
+        this.messages.length == 0 ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
+      } catch (e) {
+        this.createMessage("Error loading past messages. Please try again.", "assistant");
         return;
       }
-      for (let i = 0; i < response.data.length; i++) {
-        this.messages.push({
-          id: response.data[i].id,
-          content: response.data[i].message,
-          sender: response.data[i].role == "model" ? "assistant" : "user",
-          timestamp: response.data[i].time
-        });
-        this.createMessage(response.data[i].message, response.data[i].role == "model" ? "assistant" : "user", response.data[i].time, response.data[i].id);
-      }
-      this.messages.length == 0 ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
     });
   }
   sanitizeUserInput(input) {
@@ -110,7 +112,6 @@ class MessageManager {
   }
   handleBackgroundListener(msg, sender, sendResponse) {
     if (msg.action === "selectedWord") {
-      console.log("📨 Received text:", msg.text);
       const inputEle = document.getElementById("message-input");
       this.backgroundServiceResponse = msg.text;
       inputEle.value = this.backgroundServiceResponse;
@@ -248,7 +249,7 @@ class AccountManager {
     this.isLoggedIn = false;
     this.userData = null;
     this.errorMessage = "";
-    this.SIGNIN_URL = "http://localhost:5173/signin";
+    this.SIGNIN_URL = "https://alinea-ai.netlify.app/signin";
     this.init();
   }
   init() {
@@ -275,7 +276,6 @@ class AccountManager {
           this.errorMessage = response.error;
           return;
         }
-        console.log(response.data);
         this.userData = response.data;
         this.isLoggedIn = true;
         this.updateUI();
@@ -367,7 +367,7 @@ class AccountManager {
     const upgradeBtn = document.getElementById("upgrade-btn");
     if (planDisplay) {
       if (this.userData.plan_name.toLowerCase() === "pro plan") {
-        planDisplay.textContent = "Pro Plan • Unlimited prompts";
+        planDisplay.textContent = "Pro Plan • 6M tokens";
         planDisplay.style.backgroundColor = "#10b981";
         planDisplay.style.color = "white";
         if (upgradeBtn) upgradeBtn.style.display = "none";
@@ -402,7 +402,6 @@ class ChatInterface {
     this.restoreTab();
     this.openHistory();
     this.setNumberHistoryLinks();
-    console.log("Chat app initialized successfully!");
   }
   setupEventListeners() {
     document.querySelectorAll(".nav-button").forEach((button) => {
@@ -431,14 +430,12 @@ class ChatInterface {
           const isGoogleDocs = activeTab.url?.startsWith("https://docs.google.com/document");
           if (isGoogleDocs) {
             chrome.tabs.sendMessage(activeTab.id, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
-              console.log("Response from content script:", response);
             });
           } else {
             chrome.tabs.create({ url: "https://docs.google.com/document/u/0/" }, (newTab) => {
               chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
                 if (tabId === newTab.id && info.status === "complete") {
                   chrome.tabs.sendMessage(tabId, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
-                    console.log("Response from content script (new tab):", response);
                   });
                   chrome.tabs.onUpdated.removeListener(listener);
                 }
@@ -506,7 +503,6 @@ class ChatInterface {
       - Reflect the tone, vocabulary, and sentence structure.
     `;
     chrome.runtime.sendMessage({ action: "PARAPHRASE", prompt }, (response) => {
-      console.log(response);
       button.disabled = false;
       button.textContent = "Paraphrase Text";
       outputSection.classList.remove("hidden");

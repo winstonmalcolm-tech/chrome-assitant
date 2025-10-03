@@ -10,11 +10,11 @@
   ],
   "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history", "identity", "storage"],
   "action": {
-    "default_title": "Open Mic Chat"
+    "default_title": "Alinea AI"
   },
   "content_scripts": [
     {
-      "matches":["http://localhost:5173/*"],
+      "matches":["http://localhost:5173/*", "https://alinea-ai.netlify.app/*"],
       "js": ["src/tokenListener.js"],
       "run_at": "document_idle"
     },
@@ -52,7 +52,7 @@
     "openPanelOnActionClick": true
   },
   "externally_connectable": {
-    "matches": ["http://localhost:5173/*"]
+    "matches": ["http://localhost:5173/*", "https://alinea-ai.netlify.app/*"]
   },
   "web_accessible_resources": [
     {
