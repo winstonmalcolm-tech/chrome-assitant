@@ -1,20 +1,26 @@
-import { Resend } from "resend";
+import { MailtrapClient } from "mailtrap";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const sendMail = async (to, subject, name, url) => {
 
-const sendMail = async (to, subject, html) => {
-  const {data, error} = await resend.emails.send({
-    from: 'Acme <onboarding@resend.dev>',
-    to: ["delivered@resend.dev"],
-    subject: subject,
-    html: html
-  });
+  try {
+    const client = new MailtrapClient({ token: process.env.MAILTRAP_API_TOKEN });
 
-  if (error) {
-    return {success: false, message: error.message};
+    await client.send({
+      from: { email: "hello@demomailtrap.com", name: "Alinea AI" },
+      to: [{ email: to }],
+      template_uuid: "3ef21fb2-2837-439e-914e-683616d8ca9f",
+      template_variables: { 
+        name,
+        verification_url: url 
+      }
+    });
+
+    return {success: true, message: "Email sent"};
+
+  } catch (error) {
+    console.log(error);
+    return {success: false, message: "Server Error"};
   }
-
-  return {success: true, data: data};
 }
 
 export {
