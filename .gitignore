@@ -1,4 +1,5 @@
 server/node_modules
 chrome_ext/node_modules
 website/node_modules
+website/.env
 server/.env
