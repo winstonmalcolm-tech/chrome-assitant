@@ -53,7 +53,7 @@ class AuthController {
       const url = `${process.env.FRONTEND_BASE_URL}/verify?token=${token}`;
 
       // Send email
-      const result = await sendMail(email, "Welcome to Tatalina", `<h1>${name}, Dude, Click <a href="${url}">here</a> to verify your token.</h1>`);
+      const result = await sendMail(email, "Welcome to Alinea AI", name, url);
 
       if (!result.success) {
         return res.status(500).json({ error: result.message });
@@ -76,7 +76,7 @@ class AuthController {
         return res.status(400).json({success: false, message: "Please enter an email"});
       }
 
-      let sql = "SELECT email from users_tbl WHERE email = ?";
+      let sql = "SELECT email, name from users_tbl WHERE email = ?";
       const [users] = await pool.query(sql, [email]);
 
       if (users.length < 1) {
@@ -98,7 +98,7 @@ class AuthController {
       const url = `${process.env.FRONTEND_BASE_URL}/verify?token=${token}`;
 
       // Send email
-      const result = await sendMail(email, "Email verification", `<h1>Dude, Click <a href="${url}">here</a> to verify your account</h1>`);
+      const result = await sendMail(email, "Welcome to Alinea AI", users[0].name, url);
 
       if (!result.success) {
         return res.status(500).json({ error: result.message });

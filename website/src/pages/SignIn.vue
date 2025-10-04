@@ -3,7 +3,7 @@
   import { reactive, ref } from "vue";
 
   const data = reactive({
-    email: 'delivered@resend.dev',
+    email: '',
     loading: false
   });
 
@@ -56,7 +56,7 @@
         </div>
 
         <form @submit.prevent="handleSignIn()" class="flex flex-col items-center gap-4">
-          <input type="email" v-bind:value="data.email" class="focus:ring-2 focus:ring-blue-500/50 w-full p-2 border-[1px] border-gray-300 rounded-lg outline-none" placeholder="Enter email">
+          <input type="email" v-model="data.email" class="focus:ring-2 focus:ring-blue-500/50 w-full p-2 border-[1px] border-gray-300 rounded-lg outline-none" placeholder="Enter email">
           <p class="text-red-400" v-if="error">* {{ error }}</p>
           <p class="text-green-400" v-if="message">{{ message }}</p>
           <p class="text-yellow-500" v-if="data.loading">Loading...</p>
