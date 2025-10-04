@@ -108,6 +108,8 @@ const webhook = async (req, res) => {
 
   try {
     const payload = req.body;
+
+    console.log('Paddle webhook received:', payload);
     
     const event = payload.event_type;
     const data = payload.data;
