@@ -42,6 +42,12 @@
     font-weight: 600;
 }
 
+#alinea-header-img {
+    height: 40px;
+    width: 50px;
+    margin-right: 12px;
+}
+
 .close-btn {
     background: none;
     border: none;

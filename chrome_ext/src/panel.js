@@ -1,3 +1,5 @@
+import {marked} from "marked";
+
 // Theme Management
 class ThemeManager {
   constructor() {
@@ -82,7 +84,7 @@ class MessageManager {
             sender: (response.data[i].role == "model") ? "assistant" : "user",
             timestamp: response.data[i].time
           })
-          this.createMessage(response.data[i].message, (response.data[i].role == "model") ? "assistant" : "user", response.data[i].time, response.data[i].id);
+          this.createMessage((response.data[i].role == "model") ? marked(response.data[i].message) : response.data[i].message, (response.data[i].role == "model") ? "assistant" : "user", response.data[i].time, response.data[i].id);
         }
 
         // Add initial assistant message
