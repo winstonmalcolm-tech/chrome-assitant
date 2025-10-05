@@ -71,7 +71,7 @@ class MessageManager {
     chrome.runtime.sendMessage({action: "PAST_MESSAGES"}, (response) => {
       try {
         if (response.success == false) {
-          this.createMessage(response.error, "assistant")
+          this.createMessage(response.error, "system")
           return;
         }
 
@@ -89,7 +89,7 @@ class MessageManager {
         (this.messages.length == 0) ? this.createMessage("Hello! How can I help you today?", "assistant") : null;
 
       } catch (e) {
-        this.createMessage("Error loading past messages. Please try again.", "assistant")
+        this.createMessage("Error loading past messages. Please try again.", "system")
         return;
       }
       
@@ -160,7 +160,7 @@ class MessageManager {
 
     this.messages.push(message)
     this.renderMessage(message)
-    this.scrollToBottom()
+    //this.scrollToBottom()
     return message
   }
 
@@ -170,7 +170,7 @@ class MessageManager {
     messageElement.innerHTML = `
             <div class="message-bubble">
                 <p>${message.sender == "assistant" ? message.content : this.escapeHtml(message.content)}</p>
-                <span class="timestamp">${this.formatTime(message.timestamp)}</span>
+                ${message.sender !== 'system' ? `<span class="timestamp">${this.formatTime(message.timestamp)}</span>` : ''}
             </div>
         `
     this.messagesContainer.appendChild(messageElement)
@@ -262,7 +262,7 @@ class MessageManager {
       this.hideTypingIndicator()
 
       if (response.success == false) {
-        this.createMessage(response.error, "assistant");
+        this.createMessage(response.error, "system");
         return;
       }
 
