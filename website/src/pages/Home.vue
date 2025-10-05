@@ -43,8 +43,7 @@ const features = ref([
           Supercharge Your Browser with <span className="text-primary-500">Professional Tools</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto text-pretty">
-          Unlock premium features and boost your productivity with our powerful Chrome extension. Join thousands of
-          professionals who trust ExtensionPro.
+          Generate emails, craft documents, paraphrase with clarity, and chat with AI — all in one streamlined workspace. Designed to help you write faster and smarter from day one.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
           <RouterLink to="signup" class="cursor-pointer hover:bg-blue-700 transition duration-300 text-lg text-white rounded-lg px-8 py-4 bg-primary-500 flex items-center justify-center">
