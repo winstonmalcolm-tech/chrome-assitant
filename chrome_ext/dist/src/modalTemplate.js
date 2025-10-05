@@ -10562,8 +10562,14 @@ class BuilderElement extends XmlComponent {
 const AlignmentType = {
   /** Align Start */
   START: "start",
+  /** Align Center */
+  CENTER: "center",
   /** Align Left */
-  LEFT: "left"
+  LEFT: "left",
+  /** Align Right */
+  RIGHT: "right",
+  /** Justified */
+  JUSTIFIED: "both"
 };
 class AlignmentAttributes extends XmlAttributeComponent {
   constructor() {
@@ -13173,9 +13179,10 @@ const VerticalAlignTable = {
   CENTER: "center",
   BOTTOM: "bottom"
 };
-__spreadProps(__spreadValues({}, VerticalAlignTable), {
+const VerticalAlignSection = __spreadProps(__spreadValues({}, VerticalAlignTable), {
   BOTH: "both"
 });
+const VerticalAlign2 = VerticalAlignSection;
 class VerticalAlignAttributes extends XmlAttributeComponent {
   constructor() {
     super(...arguments);
@@ -19628,6 +19635,8 @@ class SmartTemplateGenerator {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html2;
     document.body.appendChild(wrapper);
+    const iconUrl = chrome.runtime.getURL("alinea_icon.png");
+    document.getElementById("alinea-header-img").src = iconUrl;
   }
   sanitizeUserInput(input) {
     let sanitized = input.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "").replace(/<\/?[^>]+(>|$)/g, "").replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
@@ -19645,7 +19654,6 @@ class SmartTemplateGenerator {
       document.getElementById("clear-btn")?.addEventListener("click", () => this.clearInput());
       document.querySelector(".close-btn")?.addEventListener("click", () => this.closeTemplateGeneratorModal());
       document.getElementById("prompt-input")?.focus();
-      document.querySelector('[onclick*="copyTemplate"]')?.addEventListener("click", () => this.copyTemplate());
       document.querySelector('[onclick*="downloadTemplate"]')?.addEventListener("click", () => this.downloadTemplate());
       document.querySelector('[onclick*="modifyTemplate"]')?.addEventListener("click", () => this.modifyTemplate());
     }, 0);
@@ -19743,44 +19751,11 @@ class SmartTemplateGenerator {
     document.getElementById("prompt-input").value = "";
     document.getElementById("prompt-input").focus();
   }
-  async copyTemplate() {
-    if (!this.currentTemplate) {
-      this.showStatus("No template to copy.", "error");
-      return;
-    }
-    try {
-      const parser = new DOMParser();
-      const htmlDoc = parser.parseFromString(this.currentTemplate, "text/html");
-      let result = "";
-      htmlDoc.querySelectorAll("p").forEach((p) => {
-        let paragraphText = "";
-        p.innerHTML.split(/<br\s*\/?>/i).forEach((line, index, arr) => {
-          const cleanedLine = line.replace(/&nbsp;/g, " ").trim();
-          if (cleanedLine.length > 0) {
-            paragraphText += cleanedLine;
-          }
-          if (index < arr.length - 1) {
-            paragraphText += "\n";
-          }
-        });
-        if (paragraphText.length > 0) {
-          result += paragraphText + "\n\n";
-        }
-      });
-      result = result.trim();
-      await navigator.clipboard.writeText(result);
-      this.showStatus("Template copied to clipboard!", "success");
-    } catch (error) {
-      console.error("Error copying template:", error);
-      this.showStatus("Failed to copy template to clipboard.", "error");
-    }
-  }
   async downloadTemplate(filename = "document.docx") {
     const parser = new DOMParser();
     const doc = parser.parseFromString(this.currentTemplate, "text/html");
     const createParagraph = (text2, options = {}) => new Paragraph({
       spacing: { after: 0, line: 240 },
-      // single line spacing, 0pt after
       children: [
         new TextRun({
           text: text2,
@@ -19806,6 +19781,67 @@ class SmartTemplateGenerator {
         })
       ]
     });
+    const processCellContent = (cell) => {
+      const runs = [];
+      const processTextNode = (node, parentFormatting = {}) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text2 = node.textContent.trim();
+          if (text2) {
+            runs.push(
+              new TextRun({
+                text: text2,
+                font: "Times New Roman",
+                size: 24,
+                ...parentFormatting
+              })
+            );
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const formatting = { ...parentFormatting };
+          switch (node.nodeName) {
+            case "STRONG":
+            case "B":
+              formatting.bold = true;
+              break;
+            case "EM":
+            case "I":
+              formatting.italics = true;
+              break;
+            case "U":
+              formatting.underline = {};
+              break;
+            case "BR":
+              runs.push(new TextRun({ break: 1 }));
+              return;
+          }
+          node.childNodes.forEach((child) => processTextNode(child, formatting));
+        }
+      };
+      cell.childNodes.forEach((node) => processTextNode(node));
+      if (runs.length === 0) {
+        runs.push(
+          new TextRun({
+            text: cell.textContent.trim() || "",
+            font: "Times New Roman",
+            size: 24
+          })
+        );
+      }
+      return runs;
+    };
+    const getCellAlignment = (cell) => {
+      const align = cell.style.textAlign || cell.getAttribute("align");
+      switch (align?.toLowerCase()) {
+        case "center":
+          return AlignmentType.CENTER;
+        case "right":
+          return AlignmentType.RIGHT;
+        case "justify":
+          return AlignmentType.JUSTIFIED;
+        default:
+          return AlignmentType.LEFT;
+      }
+    };
     function processNode(node, children2) {
       switch (node.nodeName) {
         case "H1":
@@ -19882,58 +19918,98 @@ class SmartTemplateGenerator {
         case "TABLE": {
           const thead = node.querySelector("thead");
           const tbody = node.querySelector("tbody");
-          if (!thead || !tbody) break;
-          const headers = Array.from(thead.querySelectorAll("th")).map(
-            (th) => th.textContent.trim()
-          );
-          const columnCount = headers.length;
-          const rows = Array.from(tbody.querySelectorAll("tr")).map(
-            (tr) => Array.from(tr.querySelectorAll("td")).map((td) => ({
-              text: td.textContent.trim(),
-              colspan: parseInt(td.getAttribute("colspan") || "1", 10)
-            }))
-          );
+          const tfoot = node.querySelector("tfoot");
+          const allRows = [];
+          if (thead) {
+            Array.from(thead.querySelectorAll("tr")).forEach((tr) => {
+              allRows.push({ row: tr, isHeader: true });
+            });
+          }
+          if (tbody) {
+            Array.from(tbody.querySelectorAll("tr")).forEach((tr) => {
+              allRows.push({ row: tr, isHeader: false });
+            });
+          }
+          if (tfoot) {
+            Array.from(tfoot.querySelectorAll("tr")).forEach((tr) => {
+              allRows.push({ row: tr, isHeader: false });
+            });
+          }
+          if (allRows.length === 0) break;
+          const firstRow = allRows[0].row;
+          const firstRowCells = Array.from(firstRow.querySelectorAll("th, td"));
+          const columnCount = firstRowCells.reduce((sum, cell) => {
+            return sum + parseInt(cell.getAttribute("colspan") || "1", 10);
+          }, 0);
           const tableRows = [];
-          tableRows.push(
-            new TableRow({
-              children: headers.map(
-                (header) => new TableCell({
-                  children: [createParagraph(header, { bold: true })],
-                  shading: { fill: "D9D9D9" },
-                  verticalAlign: "center"
-                })
-              ),
-              tableHeader: true
-            })
-          );
-          rows.forEach((row) => {
+          allRows.forEach(({ row, isHeader }) => {
+            const cells = Array.from(row.querySelectorAll("th, td"));
+            if (cells.length === 0) return;
             const rowCells = [];
             let colTracker = 0;
-            row.forEach((cell) => {
+            cells.forEach((cell) => {
+              const colspan = parseInt(cell.getAttribute("colspan") || "1", 10);
+              const rowspan = parseInt(cell.getAttribute("rowspan") || "1", 10);
+              const isHeaderCell = cell.nodeName === "TH" || isHeader;
+              const alignment = getCellAlignment(cell);
+              const cellRuns = processCellContent(cell);
               rowCells.push(
                 new TableCell({
-                  children: [createParagraph(cell.text)],
-                  verticalAlign: "top",
-                  columnSpan: cell.colspan > 1 ? cell.colspan : void 0
+                  children: [
+                    new Paragraph({
+                      spacing: { after: 0, line: 240 },
+                      children: cellRuns,
+                      alignment
+                    })
+                  ],
+                  verticalAlign: VerticalAlign2.CENTER,
+                  columnSpan: colspan > 1 ? colspan : void 0,
+                  rowSpan: rowspan > 1 ? rowspan : void 0,
+                  shading: isHeaderCell ? { fill: "D9D9D9" } : void 0,
+                  borders: {
+                    top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    right: { style: BorderStyle.SINGLE, size: 1, color: "000000" }
+                  }
                 })
               );
-              colTracker += cell.colspan;
+              colTracker += colspan;
             });
             while (colTracker < columnCount) {
               rowCells.push(
                 new TableCell({
                   children: [createParagraph("")],
-                  verticalAlign: "top"
+                  verticalAlign: VerticalAlign2.CENTER,
+                  borders: {
+                    top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                    right: { style: BorderStyle.SINGLE, size: 1, color: "000000" }
+                  }
                 })
               );
               colTracker++;
             }
-            tableRows.push(new TableRow({ children: rowCells }));
+            tableRows.push(
+              new TableRow({
+                children: rowCells,
+                tableHeader: isHeader
+              })
+            );
           });
           children2.push(
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
-              rows: tableRows
+              rows: tableRows,
+              borders: {
+                top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                right: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "000000" }
+              }
             })
           );
           children2.push(blankLine);

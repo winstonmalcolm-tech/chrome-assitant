@@ -56,7 +56,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["modalTemplate.html"],
+      "resources": ["modalTemplate.html", "alinea_icon.png"],
       "matches": ["<all_urls>"]
     }
   ],
