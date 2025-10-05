@@ -50,7 +50,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     const tokens = await getTokens();
     if (tokens == null) {
-      sendResponse({ success: false, error: "Please log in" });
+      sendResponse({ success: false, error: "Please log in", role: "system" });
       return true;
     }
     switch (msg.action) {
@@ -245,7 +245,7 @@ async function chat(accessToken, refreshToken, userPrompt) {
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
       if (!refreshed) {
-        return { success: false, error: "Token refresh failed" };
+        return { success: false, error: "There is trouble authenticating", role: "system" };
       }
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken };
       await setTokens(updatedTokens);
@@ -260,23 +260,23 @@ async function chat(accessToken, refreshToken, userPrompt) {
         });
         const aiResponse = await retryRes.json();
         if (retryRes.status != 200) {
-          return { success: false, error: aiResponse.message };
+          return { success: false, error: aiResponse.message, role: "system" };
         }
         return { success: true, data: aiResponse.response };
       } catch (err) {
         console.error("Retry failed:", err.message);
-        return { success: false, error: "Please login again" };
+        return { success: false, error: "Please login again", role: "system" };
       }
     } else if (res.status == 413) {
-      return { success: false, error: "Token Exceeded, Please upgrade plan" };
+      return { success: false, error: "Token Exceeded, Please upgrade plan", role: "system" };
     } else if (res.status == 200) {
       const aiResponse = await res.json();
       return { success: true, data: aiResponse.response };
     } else {
-      return { success: false, error: "There is an issue with our Servers" };
+      return { success: false, error: "There is an issue with our Servers", role: "system" };
     }
   } catch (err) {
-    return { success: false, error: "Unknown error" };
+    return { success: false, error: "Unknown error", role: "system" };
   }
 }
 async function paraphrase(accessToken, refreshToken, userPrompt) {

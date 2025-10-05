@@ -156,12 +156,24 @@ html,
           color: white;
         }
 
+        .system-message .message-bubble {
+          background-color: #924;
+          color: #fff;
+          margin: auto;
+        }
+
         .dark .message-bubble {
           background-color: #333;
         }
 
         .dark .user-message .message-bubble {
           background-color: #2563eb;
+        }
+
+        .dark .system-message .message-bubble {
+          background-color: #924;
+          color: #fff;
+          margin: auto;
         }
 
         .message-bubble p {
