@@ -5,6 +5,18 @@ import {updateTokenUsage} from "../utils/updateTokenUsage.js";
 
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
+const chatModel = ai.getGenerativeModel({
+    model: "gemini-2.5-flash", // or "gemini-1.5-flash"
+    systemInstruction: {
+        role: "system",
+        parts: [{
+            text: `
+            You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.
+            `
+        }]
+    }
+});
+
 const chatAI = async (req, res) => {
   const { prompt } = req.body;
 
@@ -27,8 +39,7 @@ const chatAI = async (req, res) => {
       }
     }
 
-    const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
+    const chat = chatModel.startChat({
       history: pastChat || [],
     });
 

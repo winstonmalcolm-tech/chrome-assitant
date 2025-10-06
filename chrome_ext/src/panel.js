@@ -252,8 +252,6 @@ class MessageManager {
 
   async sendMessage(content) {
 
-    content = this.sanitizeUserInput(content);
-
     // Add user message
     this.createMessage(content, "user")
 
@@ -263,7 +261,7 @@ class MessageManager {
     const realPrompt = `
     You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.
     Respond to the following user query in that style:
-    ${content}
+    ${this.sanitizeUserInput(content)}
     `;
 
     chrome.runtime.sendMessage({action: "CHAT", prompt: realPrompt}, (response) => {
