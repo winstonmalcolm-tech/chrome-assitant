@@ -264,7 +264,7 @@ class MessageManager {
     ${this.sanitizeUserInput(content)}
     `;
 
-    chrome.runtime.sendMessage({action: "CHAT", prompt: realPrompt}, (response) => {
+    chrome.runtime.sendMessage({action: "CHAT", prompt: content}, (response) => {
       this.hideTypingIndicator()
 
       if (response.success == false) {

@@ -1,9 +1,9 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { marked } from "marked";
 import pool from "../database/db.js";
 import {updateTokenUsage} from "../utils/updateTokenUsage.js";
 
-const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
+const ai = new GoogleGenerativeAI({apiKey: process.env.GEMINI_API_KEY});
 
 const chatModel = ai.getGenerativeModel({
     model: "gemini-2.5-flash", // or "gemini-1.5-flash"
