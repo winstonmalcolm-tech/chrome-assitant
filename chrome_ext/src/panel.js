@@ -258,13 +258,13 @@ class MessageManager {
     // Show typing indicator
     this.showTypingIndicator()
 
-    const realPrompt = `
-    You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.
-    Respond to the following user query in that style:
-    ${this.sanitizeUserInput(content)}
-    `;
+    // const realPrompt = `
+    // You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.
+    // Respond to the following user query in that style:
+    // ${this.sanitizeUserInput(content)}
+    // `;
 
-    chrome.runtime.sendMessage({action: "CHAT", prompt: content}, (response) => {
+    chrome.runtime.sendMessage({action: "CHAT", prompt: this.sanitizeUserInput(content)}, (response) => {
       this.hideTypingIndicator()
 
       if (response.success == false) {

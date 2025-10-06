@@ -1,21 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { marked } from "marked";
 import pool from "../database/db.js";
 import {updateTokenUsage} from "../utils/updateTokenUsage.js";
 
-const ai = new GoogleGenerativeAI({apiKey: process.env.GEMINI_API_KEY});
-
-const chatModel = ai.getGenerativeModel({
-    model: "gemini-2.5-flash", // or "gemini-1.5-flash"
-    systemInstruction: {
-        role: "system",
-        parts: [{
-            text: `
-            You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.
-            `
-        }]
-    }
-});
+const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 const chatAI = async (req, res) => {
   const { prompt } = req.body;
@@ -39,8 +27,12 @@ const chatAI = async (req, res) => {
       }
     }
 
-    const chat = chatModel.startChat({
+    const chat = ai.startChat({
+      model: 'gemini-2.5-flash',
       history: pastChat || [],
+      config: {
+          systemInstruction: "You are Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.",
+      }
     });
 
     const response = await chat.sendMessage({
