@@ -27,7 +27,7 @@ const chatAI = async (req, res) => {
       }
     }
 
-    const chat = ai.startChat({
+    const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       history: pastChat || [],
       config: {
