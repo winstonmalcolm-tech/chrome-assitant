@@ -30,7 +30,6 @@ const chatAI = async (req, res) => {
     const chat = ai.chats.create({
       model: "gemini-2.5-flash",
       history: pastChat || [],
-      system_instruction: `Your name is Alinea — a friendly, helpful assistant who responds with warmth and clarity. Keep your answers short, direct, and easy to understand. Avoid long explanations or unnecessary detail. Use brief sentences or bullet points when helpful.`
     });
 
     const response = await chat.sendMessage({
