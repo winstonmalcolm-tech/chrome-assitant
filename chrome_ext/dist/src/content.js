@@ -219,7 +219,12 @@ class EmailGrammarChecker {
       padding-bottom: 16px;
       border-bottom: 1px solid #eee;
     `;
+    const headerTitleContainer = document.createElement("div");
+    headerTitleContainer.style.display = "flex";
+    headerTitleContainer.style.alignItems = "center";
+    headerTitleContainer.style.gap = "2px";
     const headerTitle = document.createElement("h3");
+    headerTitle.textContent = "Email Template Generator";
     headerTitle.style.cssText = `
       margin: 0;
       font-size: 18px;
@@ -229,7 +234,15 @@ class EmailGrammarChecker {
       align-items: center;
       gap: 8px;
     `;
-    headerTitle.textContent = "Email Generation";
+    const iconUrl = chrome.runtime.getURL("alinea_icon.png");
+    const headerImg = document.createElement("img");
+    headerImg.id = "alinea-header-img";
+    headerImg.src = iconUrl;
+    headerImg.alt = "icon";
+    headerImg.style.width = "50px";
+    headerImg.style.height = "40px";
+    headerTitleContainer.appendChild(headerImg);
+    headerTitleContainer.appendChild(headerTitle);
     const closeModalBtn = document.createElement("button");
     closeModalBtn.className = "close-modal-btn";
     closeModalBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>';
@@ -253,7 +266,7 @@ class EmailGrammarChecker {
     closeModalBtn.addEventListener("mouseleave", () => {
       closeModalBtn.style.background = "none";
     });
-    modalHeader.appendChild(headerTitle);
+    modalHeader.appendChild(headerTitleContainer);
     modalHeader.appendChild(closeModalBtn);
     const modalBody = document.createElement("div");
     modalBody.className = "modal-body";
@@ -474,7 +487,6 @@ class EmailGrammarChecker {
     btnLoading.style.display = "inline-block";
     generateBtn.disabled = true;
     generateBtn.style.cursor = "not-allowed";
-    request = this.sanitizeUserInput(request);
     let prompt;
     if (isReply) {
       prompt = `Generate a professional reply email based on this request: "${request}"

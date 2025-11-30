@@ -1,6 +1,6 @@
 // background.js
 const BASE_SERVER_URL = "https://chrome-assitant-server.onrender.com";
-// const BASE_SERVER_URL = "http://localhost:3000";
+//const BASE_SERVER_URL = "http://localhost:3000";
 
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

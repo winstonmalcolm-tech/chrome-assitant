@@ -106,6 +106,94 @@ html,
           position: relative;
           color: inherit;
         }
+        
+        .restore-tab-tooltip {
+          z-index: 500;
+          position: absolute;
+          bottom: -28px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #333;
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease;
+        }
+
+        .chrome-history-tooltip {
+          z-index: 500;
+          position: absolute;
+          bottom: -28px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #333;
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease;
+        }
+
+        .generate-template-tooltip {
+          z-index: 500;
+          position: absolute;
+          bottom: -28px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #333;
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease;
+        }
+
+        .theme-tooltip {
+          z-index: 500;
+          position: absolute;
+          bottom: -28px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #333;
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease;
+        }
+
+        #theme-toggle:hover .theme-tooltip {
+          opacity: 1;
+          pointer-events: all;
+        }
+
+        #chrome-history:hover .chrome-history-tooltip {
+          opacity: 1;
+          pointer-events: all;
+        }
+        
+        #restore-tab:hover .restore-tab-tooltip {
+          opacity: 1;
+          pointer-events: all;
+        }
+
+        #generate-template:hover .generate-template-tooltip {
+          opacity: 1;
+          pointer-events: all;
+        }
 
         .icon-button:hover {
           background-color: #f5f5f5;
@@ -128,6 +216,46 @@ html,
           text-align: center;
         }
 
+        .loader {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .bar {
+          display: inline-block;
+          width: 3px;
+          height: 20px;
+          background-color: rgba(255, 255, 255, .5);
+          border-radius: 10px;
+          animation: scale-up4 1s linear infinite;
+        }
+
+        .bar:nth-child(2) {
+          height: 35px;
+          margin: 0 5px;
+          animation-delay: .25s;
+        }
+
+        .bar:nth-child(3) {
+          animation-delay: .5s;
+        }
+
+        @keyframes scale-up4 {
+          20% {
+            background-color: #3b82f6;
+            transform: scaleY(1.5);
+          }
+
+          40% {
+            transform: scaleY(1);
+          }
+        }
+
+        .loading-hide {
+          display: none;
+        }
+
         .messages-container {
           flex: 1;
           overflow-y: auto;
@@ -145,10 +273,11 @@ html,
         }
 
         .message-bubble {
-          background-color: #f1f5f9;
+          background-color: #ddd;
           padding: 12px 16px;
           border-radius: 18px;
           position: relative;
+          font-size: 13.5px;
         }
 
         .user-message .message-bubble {
@@ -178,15 +307,37 @@ html,
 
         .message-bubble p {
           margin: 0;
-          line-height: 1.4;
+          line-height: 1.6;
           word-break: break-word;
         }
 
+        .message-bubble li {
+          margin-bottom: 5px;
+        }
+
         .timestamp {
-          font-size: 11px;
+          font-size: 9px;
           opacity: 0.7;
           margin-top: 6px;
           display: block;
+        }
+
+        .ai-chat-button{
+          background: none;
+          border: none;
+          min-width: 23px;
+          cursor: pointer;
+          padding: 5px;
+          transition: all 0.2s ease-in-out;
+        }
+
+        .dark .ai-chat-button {
+          color: white;
+        }
+
+        .ai-chat-button:hover {
+          background-color: grey;
+          border-radius: 20px;
         }
 
         .chat-input-form {
@@ -690,6 +841,7 @@ html,
           color: #64748b;
           font-size: 11px;
           font-weight: 500;
+          position: relative;
         }
 
         .dark .nav-button {
@@ -719,6 +871,7 @@ html,
         .nav-button span {
           margin-top: 2px;
         }
+
 
         .messages-container::-webkit-scrollbar,
         .paraphrasing-container::-webkit-scrollbar {
