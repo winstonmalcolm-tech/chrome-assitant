@@ -180,7 +180,7 @@ const webhook = async (req, res) => {
         // Subscription was cancelled
         sql = `
           UPDATE user_subscriptions_tbl
-          SET plan_id = ?
+          SET plan_id = ?,
               status = ?, 
               cancel_at = ?,
               next_bill_date = ?, 

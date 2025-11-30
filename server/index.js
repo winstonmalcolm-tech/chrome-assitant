@@ -11,10 +11,12 @@ import PayRoutes from "./routes/pay.route.js";
 
 //Middlewares
 import errorHandler from './middlewares/errorHandler.js';
+import logger from './middlewares/logger.js';
 
 const app = express();
 app.use(cors())
 
+app.use(logger);
 app.use(express.json());
 
 

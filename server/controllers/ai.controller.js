@@ -140,7 +140,7 @@ const generateDocTemplate = async (req, res) => {
 const getPastMessages = async (req, res) => {
   try {
     let pastChat = [];
-    let sql = "SELECT user_role, content FROM message_tbl WHERE user_id = ?";
+    let sql = "SELECT user_role, content, sentAt FROM message_tbl WHERE user_id = ?";
     let [messages] = await pool.query(sql, [req.user.userId]);
 
     if (messages.length > 0) {

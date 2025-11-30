@@ -1147,6 +1147,7 @@ class MessageManager {
     if (typeof window.chrome !== "undefined" && window.chrome.runtime) {
       window.chrome.runtime.onMessage.addListener(this.handleBackgroundListener.bind(this));
     }
+    document.querySelector("#alinea-load-message-container").classList.remove("loading-hide");
     chrome.runtime.sendMessage({ action: "PAST_MESSAGES" }, (response) => {
       try {
         if (response.success == false) {
@@ -1166,6 +1167,15 @@ class MessageManager {
       } catch (e) {
         this.createMessage("Error loading past messages. Please try again.", "system");
         return;
+      } finally {
+        document.querySelector("#alinea-load-message-container").classList.add("loading-hide");
+      }
+    });
+    console.log("Loaded");
+    document.addEventListener("click", (event) => {
+      const buttonElement = event.target.closest(".ai-chat-button");
+      if (buttonElement) {
+        this.handleCopyButtonClick(buttonElement);
       }
     });
   }
@@ -1191,24 +1201,21 @@ class MessageManager {
       initialTimestamp.textContent = this.formatTime(/* @__PURE__ */ new Date());
     }
   }
-  formatTime(date) {
-    const formatted = date.toLocaleString("en-US", {
-      weekday: "short",
-      // "Mon"
+  formatTime(dateInput) {
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      return "Invalid Date";
+    }
+    const formatter = new Intl.DateTimeFormat("en-US", {
       month: "short",
-      // "Sep"
+      // 'Nov'
       day: "numeric",
-      // "8"
-      year: "numeric",
-      // "2025"
-      hour: "2-digit",
-      // "09"
-      minute: "2-digit",
-      // "40"
-      hour12: true
-      // "AM/PM" format
+      // '10'
+      year: "numeric"
+      // '2025'
+      // Time components (weekday, hour, minute) are intentionally omitted
     });
-    return formatted;
+    return formatter.format(date);
   }
   createMessage(content, sender, time, id) {
     const messageId = Date.now().toString();
@@ -1223,11 +1230,36 @@ class MessageManager {
     this.renderMessage(message);
     return message;
   }
+  handleCopyButtonClick(buttonElement) {
+    console.log("Attempting to copy plain text...");
+    const rawHtmlContent = buttonElement.getAttribute("data-content");
+    const originalContent = buttonElement.innerHTML;
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = rawHtmlContent;
+    const messageContent = tempDiv.textContent || tempDiv.innerText || "";
+    if (!navigator.clipboard) {
+      console.error("Clipboard API not available in this browser.");
+      return;
+    }
+    navigator.clipboard.writeText(messageContent).then(() => {
+      buttonElement.innerHTML = "Copied!";
+      buttonElement.disabled = true;
+      setTimeout(() => {
+        buttonElement.innerHTML = originalContent;
+        buttonElement.disabled = false;
+      }, 1e3);
+    }).catch((err) => {
+      console.error("Failed to copy text: ", err);
+    });
+  }
   renderMessage(message) {
     const messageElement = document.createElement("div");
     messageElement.className = `message ${message.sender}-message`;
     messageElement.innerHTML = `
-            <div class="message-bubble">
+            <div class="message-bubble ${message.sender == "assistant" ? "right" : "left"}">
+                ${message.sender == "assistant" ? `<div style="width: 100%; display: flex;">
+                    <button data-content="${message.content}" style="margin-left: auto;" class="ai-chat-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>
+                   </div>` : ""}
                 <p>${message.sender == "assistant" ? message.content : this.escapeHtml(message.content)}</p>
                 ${message.sender !== "system" ? `<span class="timestamp">${this.formatTime(message.timestamp)}</span>` : ""}
             </div>
@@ -1312,6 +1344,7 @@ class AccountManager {
     this.userData = null;
     this.errorMessage = "";
     this.SIGNIN_URL = "https://alinea-ai.netlify.app/signin";
+    this.DASHBOARD = "https://alinea-ai.netlify.app/dashboard";
     this.init();
   }
   init() {
@@ -1374,19 +1407,17 @@ class AccountManager {
     this.updateUI();
   }
   handleLogout() {
-    const upgradeUrl = "http://localhost:5173/dashboard";
     if (typeof chrome !== "undefined" && chrome.tabs) {
-      chrome.tabs.create({ url: upgradeUrl });
+      chrome.tabs.create({ url: this.DASHBOARD });
     } else {
-      window.open(upgradeUrl, "_blank");
+      window.open(this.DASHBOARD, "_blank");
     }
   }
   handleUpgrade() {
-    const upgradeUrl = "http://localhost:5173/dashboard";
     if (typeof chrome !== "undefined" && chrome.tabs) {
-      chrome.tabs.create({ url: upgradeUrl });
+      chrome.tabs.create({ url: this.DASHBOARD });
     } else {
-      window.open(upgradeUrl, "_blank");
+      window.open(this.DASHBOARD, "_blank");
     }
   }
   updateUI() {
@@ -1463,7 +1494,6 @@ class ChatInterface {
     this.setupEventListeners();
     this.restoreTab();
     this.openHistory();
-    this.setNumberHistoryLinks();
   }
   setupEventListeners() {
     document.querySelectorAll(".nav-button").forEach((button) => {
@@ -1595,11 +1625,6 @@ class ChatInterface {
         }
       });
     }
-  }
-  setNumberHistoryLinks() {
-    chrome.history.search({ text: "", maxResults: 1e3 }, (results) => {
-      document.getElementById("notificationBadge").textContent = results.length > 99 ? "99+" : results.length;
-    });
   }
 }
 document.addEventListener("DOMContentLoaded", async () => {

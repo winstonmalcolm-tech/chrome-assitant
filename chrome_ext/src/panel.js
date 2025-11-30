@@ -1,4 +1,4 @@
-import {marked} from "marked";
+import { marked } from "marked";
 
 // Theme Management
 class ThemeManager {
@@ -69,15 +69,17 @@ class MessageManager {
       window.chrome.runtime.onMessage.addListener(this.handleBackgroundListener.bind(this))
     }
 
+    //this.createMessage("Loading past messages...", 'assistant')
+    document.querySelector("#alinea-load-message-container").classList.remove("loading-hide");
     //Add the past messages here
-    chrome.runtime.sendMessage({action: "PAST_MESSAGES"}, (response) => {
+    chrome.runtime.sendMessage({ action: "PAST_MESSAGES" }, (response) => {
       try {
         if (response.success == false) {
           this.createMessage(response.error, "system")
           return;
         }
 
-        for (let i=0; i<response.data.length; i++) {
+        for (let i = 0; i < response.data.length; i++) {
           this.messages.push({
             id: response.data[i].id,
             content: response.data[i].message,
@@ -93,24 +95,42 @@ class MessageManager {
       } catch (e) {
         this.createMessage("Error loading past messages. Please try again.", "system")
         return;
+      } finally {
+        document.querySelector("#alinea-load-message-container").classList.add("loading-hide");
       }
-      
+
+    });
+
+    console.log("Loaded");
+    // Select all buttons with the class 'copy-btn'
+    document.addEventListener('click', (event) => {
+      // .closest() looks at the clicked element and its parents for the selector
+      const buttonElement = event.target.closest('.ai-chat-button');
+
+      // Check if the clicked element is one of our copy buttons
+      if (buttonElement) {
+        // Prevent default behavior/propagation if necessary
+        // event.preventDefault();
+
+        // Execute the copy logic
+        this.handleCopyButtonClick(buttonElement);
+      }
     });
   }
 
   sanitizeUserInput(input) {
     // Remove script/style tags, HTML tags, and trim whitespace
     let sanitized = input.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-                        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-                        .replace(/<\/?[^>]+(>|$)/g, '')
-                        .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
-                        .trim();
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
+      .trim();
     // Optionally, escape special HTML characters
     sanitized = sanitized.replace(/&/g, "&amp;")
-                        .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;")
-                        .replace(/"/g, "&quot;")
-                        .replace(/'/g, "&#039;");
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
     return sanitized;
   }
 
@@ -135,18 +155,25 @@ class MessageManager {
     }
   }
 
-  formatTime(date) {
-    const formatted = date.toLocaleString('en-US', {
-      weekday: 'short',   // "Mon"
-      month: 'short',     // "Sep"
-      day: 'numeric',     // "8"
-      year: 'numeric',    // "2025"
-      hour: '2-digit',    // "09"
-      minute: '2-digit',  // "40"
-      hour12: true        // "AM/PM" format
+  formatTime(dateInput) {
+    // Ensure the input is converted to a Date object first, 
+    // which handles both ISO strings and existing Date objects.
+    const date = new Date(dateInput);
+
+    // Check for invalid dates before formatting
+    if (isNaN(date.getTime())) {
+      return "Invalid Date";
+    }
+
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      month: 'short',     // 'Nov'
+      day: 'numeric',     // '10'
+      year: 'numeric',    // '2025'
+      // Time components (weekday, hour, minute) are intentionally omitted
     });
 
-    return formatted;
+    // The formatted output will be structured as "Mon Day, Year"
+    return formatter.format(date);
   }
 
   createMessage(content, sender, time, id) {
@@ -166,11 +193,58 @@ class MessageManager {
     return message
   }
 
+  handleCopyButtonClick(buttonElement) {
+    console.log("Attempting to copy plain text...");
+
+    // 1. Get the raw HTML string from the data attribute
+    const rawHtmlContent = buttonElement.getAttribute('data-content');
+    const originalContent = buttonElement.innerHTML;
+
+    // 2. Create a temporary, off-screen element
+    const tempDiv = document.createElement('div');
+
+    // 3. Insert the raw HTML into the temporary element
+    tempDiv.innerHTML = rawHtmlContent;
+
+    // 4. Extract the plain text using textContent
+    // This strips out all HTML tags (<p>, <b>, etc.)
+    const messageContent = tempDiv.textContent || tempDiv.innerText || ''; // Use innerText as a fallback
+
+    // Check for Clipboard API support
+    if (!navigator.clipboard) {
+      console.error("Clipboard API not available in this browser.");
+      return;
+    }
+
+    // 5. Copy the plain text content
+    navigator.clipboard.writeText(messageContent)
+      .then(() => {
+        // Success feedback
+        buttonElement.innerHTML = 'Copied!';
+        buttonElement.disabled = true;
+
+        // Revert state after 1 second
+        setTimeout(() => {
+          buttonElement.innerHTML = originalContent;
+          buttonElement.disabled = false;
+        }, 1000);
+      })
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+        // Optionally, show a failed message
+      });
+  }
+
   renderMessage(message) {
     const messageElement = document.createElement("div")
     messageElement.className = `message ${message.sender}-message`
     messageElement.innerHTML = `
-            <div class="message-bubble">
+            <div class="message-bubble ${message.sender == 'assistant' ? 'right' : 'left'}">
+                ${message.sender == 'assistant' ?
+        `<div style="width: 100%; display: flex;">
+                    <button data-content="${message.content}" style="margin-left: auto;" class="ai-chat-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>
+                   </div>` : ''
+      }
                 <p>${message.sender == "assistant" ? message.content : this.escapeHtml(message.content)}</p>
                 ${message.sender !== 'system' ? `<span class="timestamp">${this.formatTime(message.timestamp)}</span>` : ''}
             </div>
@@ -264,7 +338,7 @@ class MessageManager {
     // ${this.sanitizeUserInput(content)}
     // `;
 
-    chrome.runtime.sendMessage({action: "CHAT", prompt: this.sanitizeUserInput(content)}, (response) => {
+    chrome.runtime.sendMessage({ action: "CHAT", prompt: this.sanitizeUserInput(content) }, (response) => {
       this.hideTypingIndicator()
 
       if (response.success == false) {
@@ -284,6 +358,7 @@ class AccountManager {
     this.userData = null
     this.errorMessage = "";
     this.SIGNIN_URL = 'https://alinea-ai.netlify.app/signin' // Replace with your actual sign-in URL
+    this.DASHBOARD = 'https://alinea-ai.netlify.app/dashboard'
     this.init()
   }
 
@@ -299,18 +374,18 @@ class AccountManager {
       this.isLoggedIn = false
       this.userData = null
       this.updateUI()
-    } 
-}
+    }
+  }
 
   async checkAuthStatus() {
     chrome.storage.local.get(["authTokens"], (result) => {
       const token = result.authTokens;
-      
+
       if (token == null) {
         return;
       }
 
-      chrome.runtime.sendMessage({action: "FETCH_USER"}, (response) => {
+      chrome.runtime.sendMessage({ action: "FETCH_USER" }, (response) => {
         if (response.success == false) {
           this.errorMessage = response.error;
           return;
@@ -359,30 +434,29 @@ class AccountManager {
   handleAuthSuccess(userData) {
     this.userData = userData
     this.isLoggedIn = true
-    
+
     // Update UI
     this.updateUI()
   }
 
   handleLogout() {
     // Open upgrade page in new tab
-    const upgradeUrl = 'http://localhost:5173/dashboard'
-    
+
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: upgradeUrl })
+      chrome.tabs.create({ url: this.DASHBOARD })
     } else {
-      window.open(upgradeUrl, '_blank')
+      window.open(this.DASHBOARD, '_blank')
     }
   }
 
   handleUpgrade() {
     // Open upgrade page in new tab
     const upgradeUrl = 'http://localhost:5173/dashboard'
-    
+
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: upgradeUrl })
+      chrome.tabs.create({ url: this.DASHBOARD })
     } else {
-      window.open(upgradeUrl, '_blank')
+      window.open(this.DASHBOARD, '_blank')
     }
   }
 
@@ -422,7 +496,7 @@ class AccountManager {
     // Update avatar
     const userAvatar = document.getElementById('user-avatar')
     const avatarFallback = document.getElementById('avatar-fallback')
-    
+
     if (userAvatar && avatarFallback) {
       if (this.userData.avatar) {
         userAvatar.src = this.userData.avatar
@@ -439,13 +513,13 @@ class AccountManager {
     // Update plan display
     const planDisplay = document.getElementById('plan-display')
     const upgradeBtn = document.getElementById('upgrade-btn')
-    
+
     if (planDisplay) {
       if (this.userData.plan_name.toLowerCase() === 'pro plan') {
         planDisplay.textContent = 'Pro Plan • 6M tokens'
         planDisplay.style.backgroundColor = '#10b981'
         planDisplay.style.color = 'white'
-        
+
         // Hide upgrade button for pro users
         if (upgradeBtn) upgradeBtn.style.display = 'none'
       } else {
@@ -453,7 +527,7 @@ class AccountManager {
         planDisplay.textContent = `Free Plan • ${(promptsRemaining) < 0 ? 0 : promptsRemaining} prompts remaining`
         planDisplay.style.backgroundColor = '#f8fafc'
         planDisplay.style.color = '#94a3b8'
-        
+
         // Show upgrade button for free users
         if (upgradeBtn) upgradeBtn.style.display = 'flex'
       }
@@ -488,7 +562,6 @@ class ChatInterface {
     this.setupEventListeners()
     this.restoreTab()
     this.openHistory()
-    this.setNumberHistoryLinks()
   }
 
   setupEventListeners() {
@@ -516,7 +589,7 @@ class ChatInterface {
     }
 
     const generateTemplateBtn = document.getElementById('generate-template')
-    
+
     if (generateTemplateBtn) {
       generateTemplateBtn.addEventListener('click', () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -534,7 +607,7 @@ class ChatInterface {
               chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
                 if (tabId === newTab.id && info.status === "complete") {
                   chrome.tabs.sendMessage(tabId, { action: "OPEN_TEMPLATE_GENERATOR" }, (response) => {
-        
+
                   });
 
                   // Clean up the listener
@@ -546,7 +619,7 @@ class ChatInterface {
         });
       });
     }
-    
+
   }
 
   switchScreen(screenName) {
@@ -621,8 +694,8 @@ class ChatInterface {
       - Reflect the tone, vocabulary, and sentence structure.
     `;
 
-    chrome.runtime.sendMessage({action: "PARAPHRASE", prompt: prompt}, (response) => {
-      
+    chrome.runtime.sendMessage({ action: "PARAPHRASE", prompt: prompt }, (response) => {
+
       button.disabled = false
       button.textContent = "Paraphrase Text"
       outputSection.classList.remove("hidden")
@@ -657,12 +730,6 @@ class ChatInterface {
         }
       })
     }
-  }
-
-  setNumberHistoryLinks() {
-    chrome.history.search({ text: "", maxResults: 1000 }, (results) => {
-      document.getElementById("notificationBadge").textContent = results.length > 99 ? "99+" : results.length;
-    });
   }
 }
 
