@@ -59,14 +59,6 @@ import logo from "@/assets/alinea_icon.png"
           <ul class="space-y-3">
             <li>
               <RouterLink 
-                to="/privacy"
-                class="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-              >
-                Privacy Policy
-              </RouterLink>
-            </li>
-            <li>
-              <RouterLink 
                 to="/terms"
                 class="text-gray-600 hover:text-blue-600 transition-colors duration-200"
               >
