@@ -15,7 +15,7 @@ window.addEventListener("message", (event) => {
     chrome.runtime.sendMessage({ action: "tokens", tokens: event.data.tokens });
   }
   if (event.data?.type === "CHECK_EXTENSION") {
-    window.postMessage({ type: "CONTENT_SCRIPT_READY" }, "*");
+    window.postMessage({ type: "CONTENT_SCRIPT_READY", from: "alinea.ai_1289", status: "installed" }, "*");
   }
   if (event.data?.type === "LOGOUT") {
     chrome.runtime.sendMessage({ action: "LOGOUT_BCK" });
