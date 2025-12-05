@@ -43,7 +43,7 @@ window.addEventListener("message", (event) => {
   }
 
   if (event.data?.type === "CHECK_EXTENSION") {
-    window.postMessage({ type: "CONTENT_SCRIPT_READY" }, "*");
+    window.postMessage({ type: "CONTENT_SCRIPT_READY", from: "alinea.ai_1289", status: "installed" }, "*");
   }
 
   if (event.data?.type === "LOGOUT") {

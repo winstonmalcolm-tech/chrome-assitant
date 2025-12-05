@@ -116,7 +116,7 @@
 
       <h3 style="margin-top: 24px">8.1 Information We Collect</h3>
       <ul style="margin-left: 20px">
-        <li><strong>Account Information:</strong> Name, email, profile details.</li>
+        <li><strong>Account Information:</strong> Name, email.</li>
         <li>
           <strong>Payment Information:</strong> Collected and processed by Paddle only (we
           do not store any card details).
@@ -165,7 +165,7 @@
     <p>
       Depending on your region, you may have rights to access, update, delete, or restrict
       processing of your personal data. To exercise these rights, contact us at
-      <strong>[insert contact email]</strong>.
+      nativedev97@gmail.com.
     </p>
 
     <h2>11. Service Limitations & Disclaimers</h2>
@@ -201,7 +201,7 @@
     <h2>15. Contact Information</h2>
     <p>
       For questions related to these Terms, Privacy, or Refunds, contact us at:<br />
-      <strong>nativedev97@gmail.com</strong>
+      nativedev97@gmail.com
     </p>
   </main>
 </template>

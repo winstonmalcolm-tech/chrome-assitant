@@ -376,10 +376,37 @@ async function refreshAccessToken(refreshToken) {
     return null;
   }
 }
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") {
-    console.log("Alinea AI installed");
-  } else if (details.reason === "update") {
-    console.log("Grammar Assistant updated");
+function urlMatches(url, patterns) {
+  for (const pattern of patterns) {
+    if (pattern.endsWith("/*") && url.startsWith(pattern.slice(0, -2))) {
+      return true;
+    }
+    if (url.startsWith(pattern)) {
+      return true;
+    }
   }
+  return false;
+}
+const GLOBAL_SCRIPTS = ["src/content.js"];
+const TOKEN_LISTENER_SCRIPT = "src/tokenListener.js";
+const TOKEN_LISTENER_PATTERNS = [
+  "http://localhost:5173/",
+  "https://alinea-ai.netlify.app/"
+];
+chrome.runtime.onInstalled.addListener(async () => {
+  chrome.tabs.query({ url: ["http://*/*", "https://*/*"] }, async (tabs) => {
+    for (const tab of tabs) {
+      if (tab.url.startsWith("chrome")) continue;
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: GLOBAL_SCRIPTS
+      });
+      if (urlMatches(tab.url, TOKEN_LISTENER_PATTERNS)) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: [TOKEN_LISTENER_SCRIPT]
+        });
+      }
+    }
+  });
 });

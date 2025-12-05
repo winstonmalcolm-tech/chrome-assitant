@@ -38,7 +38,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     });
   }
   else if (msg.action === "tokens") {
-    chrome.storage.local.set({ authTokens: msg.tokens});    
+    chrome.storage.local.set({ authTokens: msg.tokens });
   }
 });
 
@@ -46,16 +46,16 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 function getTokens() {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(["authTokens"], (result) => {
-       if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
 
-          if (!result.authTokens) {
-            resolve(null)
-          } else {
-            resolve(JSON.parse(result.authTokens));
-          }
+        if (!result.authTokens) {
+          resolve(null)
+        } else {
+          resolve(JSON.parse(result.authTokens));
         }
+      }
     })
   })
 }
@@ -73,7 +73,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const tokens = await getTokens();
 
     if (tokens == null) {
-      sendResponse({success: false, error: "Please log in", role: "system"});
+      sendResponse({ success: false, error: "Please log in", role: "system" });
       return true;
     }
 
@@ -82,10 +82,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case "FETCH_USER":
         const result = await fetchUserData(tokens.accessToken, tokens.refreshToken)
         if (result.success == false) {
-          sendResponse({success: false, error: result.error});
-          return; 
+          sendResponse({ success: false, error: result.error });
+          return;
         }
-        sendResponse({data: result.data.user});
+        sendResponse({ data: result.data.user });
         break;
 
       case "LOGOUT_BCK":
@@ -96,49 +96,49 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const resultPara = await paraphrase(tokens.accessToken, tokens.refreshToken, msg.prompt);
 
         if (!resultPara.success) {
-          sendResponse({success: false, error: resultPara.error});
-          return; 
+          sendResponse({ success: false, error: resultPara.error });
+          return;
         }
-        sendResponse({success: true, data: resultPara.data});
+        sendResponse({ success: true, data: resultPara.data });
         break;
 
       case "CHAT":
         const resultChat = await chat(tokens.accessToken, tokens.refreshToken, msg.prompt);
         if (!resultChat.success) {
-          sendResponse({success: false, error: resultChat.error});
-          return; 
+          sendResponse({ success: false, error: resultChat.error });
+          return;
         }
-        sendResponse({success: true, data: resultChat.data});
+        sendResponse({ success: true, data: resultChat.data });
         break;
 
       case "PAST_MESSAGES":
         const messageResult = await pastMessages(tokens.accessToken, tokens.refreshToken);
 
         if (!messageResult.success) {
-          sendResponse({success: false, error: messageResult.error});
-          return; 
+          sendResponse({ success: false, error: messageResult.error });
+          return;
         }
-        sendResponse({success: true, data: messageResult.data});
+        sendResponse({ success: true, data: messageResult.data });
         break;
 
       case "DOCUMENT_GENERATION":
         const resultDoc = await documentGenerator(tokens.accessToken, tokens.refreshToken, msg.prompt)
         if (!resultDoc.success) {
-          sendResponse({success: false, error: resultDoc.error});
-          return; 
+          sendResponse({ success: false, error: resultDoc.error });
+          return;
         }
-        sendResponse({success: true, data: resultDoc.data});
+        sendResponse({ success: true, data: resultDoc.data });
         break;
 
       case "EMAIL_GENERATION":
         const resultEmail = await emailGeneration(tokens.accessToken, tokens.refreshToken, msg.prompt);
-        
+
         if (!resultEmail.success) {
-          sendResponse({success: false, error: resultEmail.error});
-          return; 
+          sendResponse({ success: false, error: resultEmail.error });
+          return;
         }
-        sendResponse({success: true, data: resultEmail.data});
-        break; 
+        sendResponse({ success: true, data: resultEmail.data });
+        break;
     }
   })()
   return true;
@@ -157,9 +157,9 @@ async function pastMessages(accessToken, refreshToken) {
     //If token expired
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "Token refresh failed" };
+        return { success: false, error: "Token refresh failed" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -171,21 +171,21 @@ async function pastMessages(accessToken, refreshToken) {
         });
 
         const messages = await retryRes.json();
-        return {success: true, data: messages.data };
+        return { success: true, data: messages.data };
 
       } catch (err) {
         console.error("Retry failed:", err);
-        return {success: false, error: "Please login again" };
+        return { success: false, error: "Please login again" };
       }
-    }                                 
+    }
     else {
       const messages = await res.json();
-      return {success: true, data: messages.data };
+      return { success: true, data: messages.data };
     }
 
   } catch (err) {
     console.error("Fetch error:", err);
-    return {sucess: false, error: "Failed to fetch Past messages" };
+    return { sucess: false, error: "Failed to fetch Past messages" };
   }
 
 }
@@ -203,9 +203,9 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
 
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "Token refresh failed" };
+        return { success: false, error: "Token refresh failed" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -214,9 +214,9 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
       try {
         const retryRes = await fetch(`${BASE_SERVER_URL}/ai/generate-doc-template`, {
           method: 'POST',
-          headers: { 
+          headers: {
             "Authorization": `Bearer ${refreshed.accessToken}`,
-            "Content-Type": "application/json", 
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ prompt: userPrompt })
         });
@@ -224,19 +224,19 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
         const aiResponse = await retryRes.json();
 
         if (retryRes.status != 200) {
-          return {success: false, error: aiResponse.message};
+          return { success: false, error: aiResponse.message };
         }
 
-        return {success: true, data: aiResponse.message };
+        return { success: true, data: aiResponse.message };
 
       } catch (err) {
         console.error("Retry failed:", err.message);
-        return {success: false, error: "Please login again" };
+        return { success: false, error: "Please login again" };
       }
 
     } else if (res.status == 413) {
-       
-      return {success: false, error: "Token Exceeded, Please upgrade plan" };
+
+      return { success: false, error: "Token Exceeded, Please upgrade plan" };
 
     } else {
       const aiResponse = await res.json();
@@ -244,12 +244,10 @@ async function documentGenerator(accessToken, refreshToken, userPrompt) {
     }
 
   } catch (err) {
-    return {success: false, error: "Unknown error" };
+    return { success: false, error: "Unknown error" };
   }
 
 }
-
-
 
 async function emailGeneration(accessToken, refreshToken, userPrompt) {
   try {
@@ -264,9 +262,9 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
 
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "Token refresh failed" };
+        return { success: false, error: "Token refresh failed" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -275,9 +273,9 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
       try {
         const retryRes = await fetch(`${BASE_SERVER_URL}/ai/generate-template`, {
           method: 'POST',
-          headers: { 
+          headers: {
             "Authorization": `Bearer ${refreshed.accessToken}`,
-            "Content-Type": "application/json", 
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ prompt: userPrompt })
         });
@@ -285,19 +283,19 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
         const aiResponse = await retryRes.json();
 
         if (retryRes.status != 200) {
-          return {success: false, error: aiResponse.message};
+          return { success: false, error: aiResponse.message };
         }
 
-        return {success: true, data: aiResponse.message };
+        return { success: true, data: aiResponse.message };
 
       } catch (err) {
         console.error("Retry failed:", err.message);
-        return {success: false, error: "Please login again" };
+        return { success: false, error: "Please login again" };
       }
 
     } else if (res.status == 413) {
-       
-      return {success: false, error: "Token Exceeded, Please upgrade plan" };
+
+      return { success: false, error: "Token Exceeded, Please upgrade plan" };
 
     } else {
       const aiResponse = await res.json();
@@ -305,7 +303,7 @@ async function emailGeneration(accessToken, refreshToken, userPrompt) {
     }
 
   } catch (err) {
-    return {success: false, error: "Unknown error" };
+    return { success: false, error: "Unknown error" };
   }
 
 }
@@ -323,9 +321,9 @@ async function chat(accessToken, refreshToken, userPrompt) {
 
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "There is trouble authenticating", role: "system"};
+        return { success: false, error: "There is trouble authenticating", role: "system" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -334,9 +332,9 @@ async function chat(accessToken, refreshToken, userPrompt) {
       try {
         const retryRes = await fetch(`${BASE_SERVER_URL}/ai/chat`, {
           method: 'POST',
-          headers: { 
+          headers: {
             "Authorization": `Bearer ${refreshed.accessToken}`,
-            "Content-Type": "application/json", 
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ prompt: userPrompt })
         });
@@ -344,19 +342,19 @@ async function chat(accessToken, refreshToken, userPrompt) {
         const aiResponse = await retryRes.json();
 
         if (retryRes.status != 200) {
-          return {success: false, error: aiResponse.message, role: "system"};
+          return { success: false, error: aiResponse.message, role: "system" };
         }
 
-        return {success: true, data: aiResponse.response };
+        return { success: true, data: aiResponse.response };
 
       } catch (err) {
         console.error("Retry failed:", err.message);
-        return {success: false, error: "Please login again", role: "system" };
+        return { success: false, error: "Please login again", role: "system" };
       }
 
     } else if (res.status == 413) {
-       
-      return {success: false, error: "Token Exceeded, Please upgrade plan", role: "system" };
+
+      return { success: false, error: "Token Exceeded, Please upgrade plan", role: "system" };
 
     } else if (res.status == 200) {
 
@@ -366,12 +364,12 @@ async function chat(accessToken, refreshToken, userPrompt) {
 
     } else {
       //const aiResponse = await res.json();
-      return {success: false, error: "There is an issue with our Servers", role: "system" };
+      return { success: false, error: "There is an issue with our Servers", role: "system" };
     }
 
   } catch (err) {
 
-    return {success: false, error: "Unknown error", role: "system" };
+    return { success: false, error: "Unknown error", role: "system" };
   }
 
 }
@@ -390,9 +388,9 @@ async function paraphrase(accessToken, refreshToken, userPrompt) {
 
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "Token refresh failed" };
+        return { success: false, error: "Token refresh failed" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -401,9 +399,9 @@ async function paraphrase(accessToken, refreshToken, userPrompt) {
       try {
         const retryRes = await fetch(`${BASE_SERVER_URL}/ai/paraphrase`, {
           method: 'POST',
-          headers: { 
+          headers: {
             "Authorization": `Bearer ${refreshed.accessToken}`,
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ prompt: userPrompt })
         });
@@ -411,40 +409,40 @@ async function paraphrase(accessToken, refreshToken, userPrompt) {
         const paraphrased = await retryRes.json();
 
         if (retryRes.status != 200) {
-          return {success: false, error: paraphrased.message};
+          return { success: false, error: paraphrased.message };
         }
 
-        return {success: true, data: paraphrased.message };
+        return { success: true, data: paraphrased.message };
 
       } catch (err) {
 
         console.error("Retry failed:", err.message);
-        return {success: false, error: "Please login again" };
+        return { success: false, error: "Please login again" };
 
       }
 
     } else if (res.status == 413) {
-       
-      return {success: false, error: "Token Exceeded, Please upgrade plan" };
+
+      return { success: false, error: "Token Exceeded, Please upgrade plan" };
 
     } else {
 
       const paraphrased = await res.json();
       return { success: true, data: paraphrased.message };
 
-    }   
+    }
 
   } catch (err) {
-    return {success: false, error: "Unknown error" };
+    return { success: false, error: "Unknown error" };
   }
 }
 
 function logout() {
 
   chrome.storage.local.clear(() => {
-    chrome.runtime.sendMessage({action: "EXT_LOGOUT"});
+    chrome.runtime.sendMessage({ action: "EXT_LOGOUT" });
   })
-  
+
 }
 
 async function fetchUserData(accessToken, refreshToken) {
@@ -458,9 +456,9 @@ async function fetchUserData(accessToken, refreshToken) {
     //If token expired
     if (res.status === 401) {
       const refreshed = await refreshAccessToken(refreshToken);
-      
+
       if (!refreshed) {
-        return {success: false, error: "Token refresh failed" };
+        return { success: false, error: "Token refresh failed" };
       }
 
       const updatedTokens = { accessToken: refreshed.accessToken, refreshToken: refreshToken };
@@ -472,21 +470,21 @@ async function fetchUserData(accessToken, refreshToken) {
         });
 
         const userData = await retryRes.json();
-        return {success: true, data: userData };
+        return { success: true, data: userData };
 
       } catch (err) {
         console.error("Retry failed:", err);
-        return {success: false, error: "Please login again" };
+        return { success: false, error: "Please login again" };
       }
-    }                                 
+    }
     else {
       const userData = await res.json();
-      return {success: true, data: userData };
+      return { success: true, data: userData };
     }
 
   } catch (err) {
     console.error("Fetch error:", err);
-    return {sucess: false, error: "Failed to fetch user data" };
+    return { sucess: false, error: "Failed to fetch user data" };
   }
 }
 
@@ -509,12 +507,59 @@ async function refreshAccessToken(refreshToken) {
 }
 
 
+
+// Helper function to check if a URL matches a pattern (simple check)
+function urlMatches(url, patterns) {
+  // This is a simplified check, adjust if your patterns are complex regex
+  for (const pattern of patterns) {
+    // Use startsWith for patterns ending in /*
+    if (pattern.endsWith('/*') && url.startsWith(pattern.slice(0, -2))) {
+      return true;
+    }
+    // Basic inclusion check if the pattern is a full origin
+    if (url.startsWith(pattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 // This is a minimal background script for the extension
 // It handles extension lifecycle and could be extended for additional features
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    console.log('Alinea AI installed');
-  } else if (details.reason === 'update') {
-    console.log('Grammar Assistant updated');
-  }
+// Listener runs once when the extension is first installed or updated
+
+const GLOBAL_SCRIPTS = ['src/content.js'];
+
+// This is the script that only runs on specific domains
+const TOKEN_LISTENER_SCRIPT = 'src/tokenListener.js';
+
+// Define the specific URL patterns for the token listener script
+const TOKEN_LISTENER_PATTERNS = [
+  "http://localhost:5173/",
+  "https://alinea-ai.netlify.app/"
+];
+
+chrome.runtime.onInstalled.addListener(async () => {
+  // Query for all tabs with http/https
+  chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] }, async (tabs) => {
+
+    for (const tab of tabs) {
+      if (tab.url.startsWith('chrome')) continue;
+
+      // --- A. Inject Global Scripts ---
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: GLOBAL_SCRIPTS
+      });
+
+      // --- B. Inject Restricted Script (tokenListener.js) ---
+      if (urlMatches(tab.url, TOKEN_LISTENER_PATTERNS)) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: [TOKEN_LISTENER_SCRIPT]
+        });
+      }
+    }
+  });
 });

@@ -8,7 +8,7 @@
     "https://*.googleapis.com/*",
     "https://securetoken.googleapis.com/*"
   ],
-  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history", "identity", "storage"],
+  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history", "storage"],
   "action": {
     "default_title": "Alinea AI"
   },
