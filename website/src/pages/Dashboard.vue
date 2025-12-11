@@ -29,7 +29,7 @@
 
   const getStatusColor = (status) => {
     if (typeof status !== 'string') return "bg-gray-100 text-gray-800 border-gray-200"
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "active":
         return "bg-green-100 text-green-800 border-green-200"
       case "expired":
@@ -159,7 +159,7 @@
 
   <main v-else class="min-h-screen mt-6 px-2 sm:px-6 md:px-10 pb-10">
   <header class="mb-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back, {{ data.user.username }} </h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back, {{ data?.user?.username }} </h1>
     <p class="text-muted-foreground">Manage your subscription and view your usage statistics</p>
   </header>
 
@@ -178,13 +178,13 @@
           </div>
           <div :class="['flex h-fit p-2 items-center justify-center gap-2 rounded-lg', getStatusColor(data.user?.status)]">
             <CheckCircle class="w-4 h-4" />
-            <p class="text-sm">{{ data.user.status }}</p>
+            <p class="text-sm">{{ data?.user?.status }}</p>
           </div>
         </header>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Column 1 -->
           <div>
-            <h1 class="mb-2 text-foreground font-bold text-xl">{{ data.user.plan_name }}</h1>
+            <h1 class="mb-2 text-foreground font-bold text-xl">{{ data?.user?.plan_name }}</h1>
             <div class="flex items-center gap-2">
               <Calendar class="w-4 h-4" />
               <p>{{ !data.user.cancel_at ? `Next Billing:` : `Cancelling On:` }} {{ next_bill_date }}</p>
@@ -193,17 +193,17 @@
           <!-- Column 2 -->
           <div class="flex flex-col items-center gap-2">
             <button
-              v-if="data.user.plan_name.toLowerCase() == 'free plan'"
+              v-if="data?.user?.plan_name?.toLowerCase() == 'free plan'"
               @click="handleUpgrade()"
               class="bg-primary-500 w-full p-2 rounded-lg text-white flex items-center justify-center gap-2 hover:bg-blue-500 transition duration-300 cursor-pointer"
             ><TrendingUp class="w-4 h-4" />Upgrade to Pro</button>
             <button
-              v-if="data.user.cancel_at && data.user.status.toLowerCase() == 'active'"
+              v-if="data?.user?.cancel_at && data?.user?.status?.toLowerCase() == 'active'"
               @click="openConfirmModal('resume')"
               class="bg-primary-500 w-full p-2 rounded-lg text-white flex items-center justify-center gap-2 hover:bg-blue-500 transition duration-300 cursor-pointer"
             ><CalendarSync class="w-4 h-4" />Resume Subscription</button>
             <button
-              v-if="!data.user.cancel_at && data.user.status.toLowerCase() == 'active' && data.user.plan_name.toLowerCase() != 'free plan'"
+              v-if="!data?.user?.cancel_at && data?.user?.status?.toLowerCase() == 'active' && data?.user?.plan_name?.toLowerCase() != 'free plan'"
               class="hover:text-red-400 cursor-pointer transition duration-300"
               @click="openConfirmModal('cancel')"
             >Cancel Subscription</button>
@@ -225,11 +225,11 @@
         <div>
           <div class="flex justify-between">
             <p class="text-sm">Tokens used</p>
-            <p class="text-sm">{{ (data.user.total_tokens > data.user.token_quota) ? data.user.token_quota : data.user.total_tokens }} / {{ data.user.token_quota }}</p>
+            <p class="text-sm">{{ (data?.user?.total_tokens > data?.user?.token_quota) ? data?.user?.token_quota : data?.user?.total_tokens }} / {{ data?.user?.token_quota }}</p>
           </div>
-          <progress class="progress [&::-webkit-progress-value]:bg-primary-500 [&::-moz-progress-bar]:bg-primary-500 w-full rounded-lg" :value="data.user.total_tokens" :max="data.user.token_quota"></progress>
+          <progress class="progress [&::-webkit-progress-value]:bg-primary-500 [&::-moz-progress-bar]:bg-primary-500 w-full rounded-lg" :value="data?.user?.total_tokens" :max="data?.user?.token_quota"></progress>
           <div class="flex justify-between">
-            <p class="text-sm">{{ Math.floor((( ((data.user.total_tokens > data.user.token_quota) ? data.user.token_quota : data.user.total_tokens)  / data.user.token_quota) * 100) )}}% Used</p>
+            <p class="text-sm">{{ Math.floor((( ((data?.user?.total_tokens > data?.user?.token_quota) ? data?.user?.token_quota : data?.user?.total_tokens)  / data?.user?.token_quota) * 100) )}}% Used</p>
             <p class="text-sm">{{ displayRemainingTokens }} Remaining</p>
           </div>
         </div>
@@ -245,8 +245,8 @@
           <p class="text-foreground text-lg">Account</p>
         </header>
         <div class="mt-5">
-          <p class="text-foreground text-md">{{ data.user.username }}</p>
-          <p class="text-md">{{ data.user.email }}</p>
+          <p class="text-foreground text-md">{{ data?.user?.username }}</p>
+          <p class="text-md">{{ data?.user?.email }}</p>
         </div>
         <div class="mt-5">
           <p class="text-foreground text-md">Member Since</p>

@@ -1,14 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Alinea AI",
-  "version": "1.0",
-  "host_permissions": [
-    "<all_urls>",
-    "https://apis.google.com/*",
-    "https://*.googleapis.com/*",
-    "https://securetoken.googleapis.com/*"
-  ],
-  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "history", "storage"],
+  "version": "1.0.3",
+  "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "storage"],
   "action": {
     "default_title": "Alinea AI"
   },
@@ -31,7 +25,7 @@
     },
     {
       "matches": [
-        "<all_urls>"
+        "https://alinea-ai.netlify.app/*"
       ],
       "js": ["src/selectText.js"],
       "run_at": "document_idle",
@@ -39,7 +33,7 @@
     },
     {
       "matches": [
-        "<all_urls>"
+        "https://docs.google.com/*"
       ],
       "js": ["src/modalTemplate.js"],
       "css": ["src/modalTemplateStyle.css"],
@@ -57,7 +51,14 @@
   "web_accessible_resources": [
     {
       "resources": ["modalTemplate.html", "alinea_icon.png"],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "http://localhost:5173/*",
+        "https://alinea-ai.netlify.app/*",
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://docs.google.com/*"
+      ]
     }
   ],
   "background": {
