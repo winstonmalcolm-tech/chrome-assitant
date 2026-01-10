@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useUserStore } from "@/stores/user";
-import { useRouter } from "vue-router";
+import router from "@/router";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_SERVER_BASE_URL
@@ -16,6 +16,7 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
 
 api.interceptors.response.use((response) => response, async (error) => {
   const originalRequest = error.config;
@@ -46,9 +47,10 @@ api.interceptors.response.use((response) => response, async (error) => {
       console.error('Refresh token failed:', refreshError);
 
       const userStore = useUserStore();
-      const router = useRouter();
-      
       userStore.logout();
+      localStorage.removeItem("jwt");
+
+      
       router.replace({name: "signin"});
 
       return Promise.reject(refreshError);

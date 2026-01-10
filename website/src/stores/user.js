@@ -1,39 +1,46 @@
-import { defineStore } from "pinia"
+import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import Auth from "@/services/auth";
 import { jwtDecode } from "jwt-decode";
+import Auth from "@/services/auth";
 
-
-const useUserStore = defineStore('user', () => {
-
-  const user = ref(false);
+export const useUserStore = defineStore("user", () => {
+  const isAuth = ref(false);
   const userId = ref(null);
 
   const auth = new Auth();
 
-  const isAuthenticated = computed(() => user.value);
-  
+  const isAuthenticated = computed(() => {
+    return isAuth.value;
+  });
 
-  async function init() {
-    const jwt = JSON.parse(localStorage.getItem("jwt"));
+  function init() {
+    try {
+      const jwt = localStorage.getItem("jwt");
+      if (!jwt) return;
 
-    if (jwt != null) {
-      const accessToken = jwt.accessToken;
-    
-      userId.value = jwtDecode(accessToken).userId;
-      user.value = jwt ? true : false;
+      const { accessToken } = JSON.parse(jwt);
+      const decoded = jwtDecode(accessToken);
+
+      isAuth.value = true;
+      userId.value = decoded.userId;
+    } catch (err) {
+      console.warn("JWT init failed, clearing auth");
+      logout();
     }
-
-    
   }
 
   function logout() {
     auth.logout();
-    user.value = false;
+    localStorage.removeItem("jwt");
+    isAuth.value = false;
     userId.value = null;
   }
 
-  return {init, isAuthenticated, user, logout, userId};
+  return {
+    init,
+    isAuthenticated,
+    isAuth,
+    userId,
+    logout,
+  };
 });
-
-export {useUserStore};
