@@ -1,28 +1,33 @@
-import { MailtrapClient } from "mailtrap";
+import nodemailer from "nodemailer";
+import { verificationEmailTemplate } from "../emailTemplates/verificationEmail.js";
+
+const baseUrl = process.env.BACKEND_BASE_URL || "http://localhost:3000";
+const logoUrl = `${baseUrl}/alinea_icon.png`;
 
 const sendMail = async (to, subject, name, url) => {
-
   try {
-    const client = new MailtrapClient({ token: process.env.MAILTRAP_API_TOKEN });
-
-    await client.send({
-      from: { email: "hello@demomailtrap.com", name: "Alinea AI" },
-      to: [{ email: to }],
-      template_uuid: "3ef21fb2-2837-439e-914e-683616d8ca9f",
-      template_variables: { 
-        name,
-        verification_url: url 
-      }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER, 
+        pass: process.env.GMAIL_APP_PASSWORD, 
+      },
     });
 
-    return {success: true, message: "Email sent"};
+    const mailOptions = {
+      from: '"Alinea AI" <no-reply.alinea@gmail.com>',
+      to: to,
+      subject: subject,
+      html: verificationEmailTemplate(name, url, logoUrl),
+    };
 
+    await transporter.sendMail(mailOptions);
+
+    return { success: true, message: "Email sent" };
   } catch (error) {
     console.log(error);
-    return {success: false, message: "Server Error"};
+    return { success: false, message: "Server Error", error: error.message };
   }
-}
-
-export {
-  sendMail
 };
+
+export { sendMail };

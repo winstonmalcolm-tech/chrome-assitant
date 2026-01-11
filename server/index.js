@@ -16,6 +16,7 @@ import logger from './middlewares/logger.js';
 const app = express();
 app.use(cors())
 
+app.use(express.static('public'));
 app.use(logger);
 app.use(express.json());
 
@@ -26,7 +27,6 @@ app.use("/pay", PayRoutes);
 
 app.use(errorHandler);
 
-console.log('Loaded API Key in index:', process.env.GEMINI_API_KEY);
 app.listen(process.env.PORT, () => {
   console.log("Server running on PORT ", process.env.PORT);
 })

@@ -52,7 +52,7 @@ async function handleSignUp() {
         "Alinea-AI Chrome extension is required to sign up. Click OK to install it."
       );
       if (proceed) {
-        window.open("https://chromewebstore.google.com/detail/alinea-ai/kkjgjilndocbmdaabdfmmnpncchgldme", "_blank");
+        location.href = "https://chromewebstore.google.com/detail/alinea-ai/kkjgjilndocbmdaabdfmmnpncchgldme";
       }
       return;
     }

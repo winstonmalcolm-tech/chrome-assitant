@@ -6,12 +6,12 @@ import { sendMail } from "../utils/mailHandler.js";
 import { generateTokens } from "../utils/tokenGenertor.js";
 
 class AuthController {
-  
+
   // Send magic link
   async register(req, res) {
     try {
       const { email, name } = req.body;
-      
+
       if (!email || !name) {
         return res.status(400).json({ error: 'All fields are required' });
       }
@@ -20,7 +20,7 @@ class AuthController {
       let [users] = await pool.query('SELECT id FROM users_tbl WHERE email = ?', [email]);
 
       if (users.length > 0) {
-        return res.status(400).json({success: false, message: "User with this email Already exists"});
+        return res.status(400).json({ success: false, message: "User with this email Already exists" });
       }
 
       const [newUser] = await pool.query('INSERT INTO users_tbl (email, name) VALUES (?, ?)', [email, name]);
@@ -31,7 +31,7 @@ class AuthController {
       const startDate = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
 
       await pool.query(
-        'INSERT INTO token_usage_tbl (user_id, usage_start, total_tokens) VALUES (?,?,?)',[newUser.insertId, startDate, 0]
+        'INSERT INTO token_usage_tbl (user_id, usage_start, total_tokens) VALUES (?,?,?)', [newUser.insertId, startDate, 0]
       );
 
       // Generate token
@@ -59,7 +59,7 @@ class AuthController {
         return res.status(500).json({ error: result.message });
       }
 
-      res.json({success: true, message: 'Please verify your email by clicking on the link that was sent to you.' });
+      res.json({ success: true, message: 'Please verify your email by clicking on the link that was sent to you.' });
 
     } catch (error) {
       console.error('Send magic link error:', error);
@@ -73,14 +73,14 @@ class AuthController {
       const { email } = req.body;
 
       if (!email) {
-        return res.status(400).json({success: false, message: "Please enter an email"});
+        return res.status(400).json({ success: false, message: "Please enter an email" });
       }
 
       let sql = "SELECT email, name from users_tbl WHERE email = ?";
       const [users] = await pool.query(sql, [email]);
 
       if (users.length < 1) {
-        return res.status(404).json({success: false, message: "There is no user with this email."});
+        return res.status(404).json({ success: false, message: "There is no user with this email." });
       }
 
       // Generate token
@@ -89,7 +89,7 @@ class AuthController {
 
       // Delete old unused tokens for this email
       sql = 'DELETE FROM magic_links_tbl WHERE email = ? AND used = FALSE';
-      await pool.query(sql,[email]);
+      await pool.query(sql, [email]);
 
       // Store new token
       sql = 'INSERT INTO magic_links_tbl (email, token, expires_at) VALUES (?, ?, ?)';
@@ -104,12 +104,12 @@ class AuthController {
         return res.status(500).json({ error: result.message });
       }
 
-      res.json({success: true, message: 'Please verify your email by clicking on the link that was sent to you.' });
+      res.json({ success: true, message: 'Please verify your email by clicking on the link that was sent to you.' });
 
 
-    }catch (error) {
+    } catch (error) {
       console.log(error.message);
-      res.status(500).json({success: false, message: "Internal server error"})
+      res.status(500).json({ success: false, message: "Internal server error" })
     }
   }
 
@@ -118,12 +118,20 @@ class AuthController {
     try {
       const { token } = req.body;
 
+      console.log("TOKEN: ", token);
+
       if (!token) {
         return res.status(400).json({ success: false, message: 'Token is required' });
       }
 
       // Check if token is valid
-      let sql = 'SELECT email FROM magic_links_tbl WHERE token = ? AND expires_at > NOW() AND used = FALSE';
+      let sql = `
+        SELECT email 
+        FROM magic_links_tbl 
+        WHERE token = ? 
+          AND expires_at > CONVERT_TZ(NOW(), 'UTC', 'America/Jamaica') 
+          AND used = FALSE
+      `;
       const [links] = await pool.query(sql, [token]);
 
       if (links.length === 0) {
@@ -142,7 +150,7 @@ class AuthController {
 
       const user = users[0];
 
-      const {accessToken, refreshToken} = generateTokens({userId: user.id, email: user.email});
+      const { accessToken, refreshToken } = generateTokens({ userId: user.id, email: user.email });
 
       res.status(200).json({
         success: true,
@@ -196,7 +204,7 @@ class AuthController {
                 WHERE 
                   u.id = ?;`;
 
-      
+
       const [users] = await pool.query(sql, [req.user.userId, req.user.userId]);
 
       if (users.length === 0) {
@@ -211,7 +219,7 @@ class AuthController {
     }
   }
 
-  async refreshToken (req, res) {
+  async refreshToken(req, res) {
 
     const refreshToken = req.body.refreshToken;
 
@@ -219,10 +227,10 @@ class AuthController {
 
     try {
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
-      const {accessToken} = generateTokens({userId: payload.userId, email: payload.email});
+      const { accessToken } = generateTokens({ userId: payload.userId, email: payload.email });
 
-      res.json({ accessToken});
-      
+      res.json({ accessToken });
+
     } catch (err) {
       console.log(err.message)
       return res.sendStatus(403);
