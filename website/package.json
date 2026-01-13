@@ -14,6 +14,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@paddle/paddle-js": "^1.4.2",
+    "@polar-sh/sdk": "^0.42.1",
     "@tailwindcss/vite": "^4.1.12",
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.11.0",

@@ -5,6 +5,7 @@
   import { LoaderCircle, Crown, Calendar, CheckCircle, TrendingUp, Users, CircleCheckBig, OctagonX, CalendarSync } from 'lucide-vue-next';
   import { initializePaddle } from '@paddle/paddle-js';
   import { jwtDecode } from "jwt-decode";
+  import { Polar } from '@polar-sh/sdk';
 
   const data = reactive({
     user: {},
@@ -14,6 +15,7 @@
 
   const memberSince = ref('');
   const next_bill_date = ref('');
+  const cancel_at = ref('');
   const displayRemainingTokens = ref(0);
   const cancelLoading = ref(false);
   const alert = reactive({
@@ -92,23 +94,44 @@
   }
 
   const handleUpgrade = async () => {
-    const paddle = await initializePaddle({
-        environment: 'sandbox', // or 'production'
-        token: 'test_4b91c684f26ba94c7aae3ddc264' // from Paddle Billing dashboard
-      })
-
     const id = jwtDecode(JSON.parse(localStorage.getItem("jwt")).accessToken).userId;
 
-    paddle.Checkout.open({
-      items: [{ priceId: 'pri_01k3pcwn1kawc8vha7p99n443k', quantity: 1 }],
-      customData: {
-        userId: id,
-      },
-      redirectUrl: 'https://alinea-ai.netlify.app/thank-you',
-      settings: {
-        displayMode: 'redirect'
+    const polar = new Polar({
+      accessToken: import.meta.env.VITE_POLAR_ACCESS_TOKEN,
+      server: 'sandbox' // sandbox or production
+    });
+
+    console.log(id);
+    const result = await polar.checkouts.create({
+      products: ['d38fcb42-2e37-4299-a4ab-e91ab5c9d973'],
+      successUrl: 'https://alinea-ai.netlify.app/thank-you',
+      cancelUrl: 'https://alinea-ai.netlify.app/dashboard',
+      externalCustomerId: id.toString(),
+      metadata: {
+        userId: id
       }
-    })
+    });
+
+    location.href = result.url;
+
+    //location.href = checkoutLink;
+    // const paddle = await initializePaddle({
+    //     environment: 'sandbox', // or 'production'
+    //     token: 'test_...' // from Paddle Billing dashboard
+    //   })
+
+    // const id = jwtDecode(JSON.parse(localStorage.getItem("jwt")).accessToken).userId;
+
+    // paddle.Checkout.open({
+    //   items: [{ priceId: 'pri_01...', quantity: 1 }],
+    //   customData: {
+    //     userId: id,
+    //   },
+    //   redirectUrl: 'https://alinea-ai.netlify.app/thank-you',
+    //   settings: {
+    //     displayMode: 'redirect'
+    //   }
+    // })
   }
 
   const fetchUser = async () => {
@@ -133,6 +156,10 @@
      date = data.user.next_bill_date ? new Date(data.user.next_bill_date) : null;
      formatted = date ? date.toISOString().split("T")[0] : "N/A";
      next_bill_date.value = formatted;
+
+     date = data.user.cancel_at ? new Date(data.user.cancel_at) : null;
+     formatted = date ? date.toISOString().split("T")[0] : "N/A";
+     cancel_at.value = formatted;
 
     } catch (error) {
       data.error = error.message;
@@ -187,7 +214,7 @@
             <h1 class="mb-2 text-foreground font-bold text-xl">{{ data?.user?.plan_name }}</h1>
             <div class="flex items-center gap-2">
               <Calendar class="w-4 h-4" />
-              <p>{{ !data.user.cancel_at ? `Next Billing:` : `Cancelling On:` }} {{ next_bill_date }}</p>
+              <p>{{ !data.user.cancel_at ? `Next Billing:` : `Cancelling On:` }} {{!data.user.cancel_at ? next_bill_date : cancel_at }}</p>
             </div>
           </div>
           <!-- Column 2 -->
