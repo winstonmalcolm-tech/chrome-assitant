@@ -1,5 +1,5 @@
 // background.js
-const BASE_SERVER_URL = "https://chrome-assitant-server.onrender.com";
+const BASE_SERVER_URL = "https://alinea-ai.duckdns.org";
 //const BASE_SERVER_URL = "http://localhost:3000";
 
 

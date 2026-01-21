@@ -1,4 +1,4 @@
-const BASE_SERVER_URL = "https://chrome-assitant-server.onrender.com";
+const BASE_SERVER_URL = "https://alinea-ai.duckdns.org";
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.action === "selectionDetected") {

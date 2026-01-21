@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Alinea AI",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "permissions": ["sidePanel","scripting", "activeTab", "sessions", "tabs", "storage"],
   "action": {
     "default_title": "Alinea AI"
